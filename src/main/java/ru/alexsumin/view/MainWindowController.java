@@ -8,10 +8,12 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
-import javafx.scene.control.ProgressBar;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 import java.io.File;
 import java.util.List;
@@ -27,6 +29,10 @@ public class MainWindowController {
     });
     @FXML
     TreeView<File> treeView = new TreeView<>();
+    Image icoFile = new Image(getClass().getResourceAsStream("/images/file.png"), 30, 30, false, false);
+    Image dirFile = new Image(getClass().getResourceAsStream("/images/folder.png"), 30, 30, false, false);
+    Image dirOpenFile = new Image(getClass().getResourceAsStream("/images/openedfolder.png"), 30, 30, false, false);
+    Image pc = new Image(getClass().getResourceAsStream("/images/pc.png"), 30, 30, false, false);
 
 
     @FXML
@@ -41,15 +47,21 @@ public class MainWindowController {
 
     private TreeCell<File> createTreeCell() {
 
-        ProgressBar progressBar = new ProgressBar();
-        TreeCell<File> cell = new TreeCell<>();
 
+        ProgressIndicator progressIndicator = new ProgressIndicator();
+        progressIndicator.setMaxWidth(20);
+        progressIndicator.setStyle(" -fx-progress-color: green;");
+
+
+        TreeCell<File> cell = new TreeCell<>();
+        cell.setPrefHeight(40);
         ChangeListener<Boolean> loadingChangeListener =
                 (ObservableValue<? extends Boolean> obs, Boolean wasLoading, Boolean isNowLoading) -> {
                     if (isNowLoading) {
-                        cell.setGraphic(progressBar);
+                        cell.setGraphic(progressIndicator);
                     } else {
-                        cell.setGraphic(null);
+                        //cell.setGraphic(null);
+                        setImageForNode(cell);
                     }
                 };
 
@@ -66,9 +78,11 @@ public class MainWindowController {
                         newLazyTreeItem.loadingProperty().addListener(loadingChangeListener);
 
                         if (newLazyTreeItem.isLoading()) {
-                            cell.setGraphic(progressBar);
+
+                            cell.setGraphic(progressIndicator);
                         } else {
                             cell.setGraphic(null);
+                            setImageForNode(cell);
                         }
                     }
                 });
@@ -81,11 +95,28 @@ public class MainWindowController {
                         cell.setGraphic(null);
                     } else {
                         cell.setText(newItem.toString());
+                        //setImageForNode(cell);
+
                     }
                 });
 
         return cell;
+
+
     }
+
+    public void setImageForNode(TreeCell<File> t) {
+
+        if (t.getTreeItem().getValue().isDirectory()) {
+
+            if (t.getTreeItem().isExpanded()) t.setGraphic(new ImageView(dirOpenFile));
+            else t.setGraphic(new ImageView(dirFile));
+        } else
+            t.setGraphic(new ImageView(icoFile));
+    }
+
+
+
 
 
     public static class TreeItemWithLoading extends TreeItem<File> {
@@ -149,11 +180,10 @@ public class MainWindowController {
                             for (File childFile : files) {
                                 TreeItemWithLoading t = new TreeItemWithLoading(childFile);
                                 children.add(t);
-                                System.out.println(t);
                             }
                         }
                     }
-                    Thread.sleep(3000);
+                    Thread.sleep(2000);
                     return children;
                 }
             };
