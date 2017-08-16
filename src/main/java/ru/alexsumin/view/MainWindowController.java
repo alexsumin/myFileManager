@@ -29,14 +29,14 @@ public class MainWindowController {
     });
     @FXML
     TreeView<File> treeView = new TreeView<>();
-    Image icoFile = new Image(getClass().getResourceAsStream("/images/file.png"), 30, 30, false, false);
-    Image dirFile = new Image(getClass().getResourceAsStream("/images/folder.png"), 30, 30, false, false);
-    Image dirOpenFile = new Image(getClass().getResourceAsStream("/images/openedfolder.png"), 30, 30, false, false);
+    Image picFile = new Image(getClass().getResourceAsStream("/images/file.png"), 30, 30, false, false);
+    Image folder = new Image(getClass().getResourceAsStream("/images/folder.png"), 30, 30, false, false);
+    Image folderOpened = new Image(getClass().getResourceAsStream("/images/openedfolder.png"), 30, 30, false, false);
     Image pc = new Image(getClass().getResourceAsStream("/images/pc.png"), 30, 30, false, false);
 
 
     @FXML
-    public void initialize() {
+    private void initialize() {
         treeView.setCellFactory(param -> this.createTreeCell());
         TreeItemWithLoading root = new TreeItemWithLoading(new File(System.getProperty("user.home")));
         treeView.setRoot(root);
@@ -50,7 +50,6 @@ public class MainWindowController {
 
         ProgressIndicator progressIndicator = new ProgressIndicator();
         progressIndicator.setMaxWidth(20);
-        //progressIndicator.setStyle(" -fx-progress-color: green;");
 
 
         TreeCell<File> cell = new TreeCell<>();
@@ -60,7 +59,6 @@ public class MainWindowController {
                     if (isNowLoading) {
                         cell.setGraphic(progressIndicator);
                     } else {
-                        //cell.setGraphic(null);
                         setImageForNode(cell);
                     }
                 };
@@ -103,42 +101,28 @@ public class MainWindowController {
 
     }
 
-    public void setImageForNode(TreeCell<File> t) {
+    private void setImageForNode(TreeCell<File> t) {
         String pic = null;
         if (t.getTreeItem().getValue().isDirectory()) {
 
-            if (t.getTreeItem().isExpanded()) t.setGraphic(new ImageView(dirOpenFile));
-            else t.setGraphic(new ImageView(dirFile));
+            if (t.getTreeItem().isExpanded()) t.setGraphic(new ImageView(folderOpened));
+            else t.setGraphic(new ImageView(folder));
         } else {
             pic = t.getTreeItem().getValue().getAbsolutePath();
             Image image = new Image("file:" + pic);
             if (image.isError()) {
-                t.setGraphic(new ImageView(icoFile));
+                t.setGraphic(new ImageView(picFile));
             } else {
                 ImageView imageView = new ImageView();
                 imageView.setImage(image);
                 imageView.setFitHeight(40);
-                imageView.setFitWidth(40); // <-- set size of image
+                imageView.setFitWidth(40);
                 imageView.setPreserveRatio(true);
                 t.setGraphic(imageView);
-
             }
         }
     }
 
-
-//    private Node getImage(String itemPath) {
-//        String parentPath = getItem().getPath().getParent().toAbsolutePath().toString();
-//        Image image = new Image("file:" + parentPath + "/" + itemPath);
-//        if (image.isError()) {
-//            return null; // <-- if not image
-//        }
-//        ImageView imageView = new ImageView();
-//        imageView.setImage(image);
-//        imageView.setFitWidth(10); // <-- set size of image
-//        imageView.setPreserveRatio(true);
-//        return imageView;
-//    }
 
 
     public static class TreeItemWithLoading extends TreeItem<File> {
@@ -146,7 +130,6 @@ public class MainWindowController {
         private final BooleanProperty loading = new SimpleBooleanProperty(false);
 
         private boolean isLeaf = true;
-        //private boolean isFirstTimeChildren = true;
         private boolean isFirstTimeLeaf = true;
 
         public TreeItemWithLoading(File value) {
