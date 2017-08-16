@@ -14,6 +14,7 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import ru.alexsumin.util.DirectoryBeforeFileComparator;
 
 import java.io.File;
 import java.util.List;
@@ -188,6 +189,8 @@ public class MainWindowController {
                             }
                         }
                     }
+                    FXCollections.sort(children, new DirectoryBeforeFileComparator());
+
                     Thread.sleep(2000);
                     return children;
                 }
