@@ -50,7 +50,7 @@ public class MainWindowController {
 
         ProgressIndicator progressIndicator = new ProgressIndicator();
         progressIndicator.setMaxWidth(20);
-        progressIndicator.setStyle(" -fx-progress-color: green;");
+        //progressIndicator.setStyle(" -fx-progress-color: green;");
 
 
         TreeCell<File> cell = new TreeCell<>();
@@ -94,9 +94,7 @@ public class MainWindowController {
                         cell.setText(null);
                         cell.setGraphic(null);
                     } else {
-                        cell.setText(newItem.toString());
-                        //setImageForNode(cell);
-
+                        cell.setText(newItem.getName());
                     }
                 });
 
@@ -106,17 +104,41 @@ public class MainWindowController {
     }
 
     public void setImageForNode(TreeCell<File> t) {
-
+        String pic = null;
         if (t.getTreeItem().getValue().isDirectory()) {
 
             if (t.getTreeItem().isExpanded()) t.setGraphic(new ImageView(dirOpenFile));
             else t.setGraphic(new ImageView(dirFile));
-        } else
-            t.setGraphic(new ImageView(icoFile));
+        } else {
+            pic = t.getTreeItem().getValue().getAbsolutePath();
+            Image image = new Image("file:" + pic);
+            if (image.isError()) {
+                t.setGraphic(new ImageView(icoFile));
+            } else {
+                ImageView imageView = new ImageView();
+                imageView.setImage(image);
+                imageView.setFitHeight(40);
+                imageView.setFitWidth(40); // <-- set size of image
+                imageView.setPreserveRatio(true);
+                t.setGraphic(imageView);
+
+            }
+        }
     }
 
 
-
+//    private Node getImage(String itemPath) {
+//        String parentPath = getItem().getPath().getParent().toAbsolutePath().toString();
+//        Image image = new Image("file:" + parentPath + "/" + itemPath);
+//        if (image.isError()) {
+//            return null; // <-- if not image
+//        }
+//        ImageView imageView = new ImageView();
+//        imageView.setImage(image);
+//        imageView.setFitWidth(10); // <-- set size of image
+//        imageView.setPreserveRatio(true);
+//        return imageView;
+//    }
 
 
     public static class TreeItemWithLoading extends TreeItem<File> {
@@ -194,6 +216,7 @@ public class MainWindowController {
                 isLeaf = children.size() == 0;
                 getChildren().setAll(children);
                 setLoading(false);
+
             });
 
             EXEC.submit(loadTask);
