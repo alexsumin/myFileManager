@@ -1,4 +1,4 @@
-package ru.alexsumin.view;
+package ru.alexsumin.filemanager.view;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -7,16 +7,21 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import ru.alexsumin.util.DirectoryBeforeFileComparator;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
+import ru.alexsumin.filemanager.model.MyTreeCell;
+import ru.alexsumin.filemanager.util.DirectoryBeforeFileComparator;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -34,11 +39,13 @@ public class MainWindowController {
     Image folder = new Image(getClass().getResourceAsStream("/images/folder.png"), 30, 30, false, false);
     Image folderOpened = new Image(getClass().getResourceAsStream("/images/openedfolder.png"), 30, 30, false, false);
     Image pc = new Image(getClass().getResourceAsStream("/images/pc.png"), 30, 30, false, false);
-
+    private File currentFile;
+    private File copiedFile;
 
     @FXML
     private void initialize() {
-        treeView.setCellFactory(param -> this.createTreeCell());
+        //treeView.setCellFactory(param -> this.createTreeCell());
+        treeView.setCellFactory(param -> new MyTreeCell());
         TreeItemWithLoading root = new TreeItemWithLoading(new File(System.getProperty("user.home")));
         treeView.setRoot(root);
         treeView.setEditable(true);
@@ -60,7 +67,7 @@ public class MainWindowController {
                     if (isNowLoading) {
                         cell.setGraphic(progressIndicator);
                     } else {
-                        setImageForNode(cell);
+                        //setImageForNode(cell);
                     }
                 };
 
@@ -81,7 +88,7 @@ public class MainWindowController {
                             cell.setGraphic(progressIndicator);
                         } else {
                             cell.setGraphic(null);
-                            setImageForNode(cell);
+                            //setImageForNode(cell);
                         }
                     }
                 });
@@ -102,27 +109,66 @@ public class MainWindowController {
 
     }
 
-    private void setImageForNode(TreeCell<File> t) {
-        String pic = null;
-        if (t.getTreeItem().getValue().isDirectory()) {
+    private void configureTreeView(TreeView treeView) {
 
-            if (t.getTreeItem().isExpanded()) t.setGraphic(new ImageView(folderOpened));
-            else t.setGraphic(new ImageView(folder));
-        } else {
-            pic = t.getTreeItem().getValue().getAbsolutePath();
-            Image image = new Image("file:" + pic);
-            if (image.isError()) {
-                t.setGraphic(new ImageView(picFile));
-            } else {
-                ImageView imageView = new ImageView();
-                imageView.setImage(image);
-                imageView.setFitHeight(40);
-                imageView.setFitWidth(40);
-                imageView.setPreserveRatio(true);
-                t.setGraphic(imageView);
+        treeView.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent t) {
+                if (t.getClickCount() == 2 && currentFile != null) {
+                    System.out.println("DOUBLE CLICK!");
+                    openFile(currentFile);
+                }
             }
+        });
+
+        treeView.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                if (event.getCode() == KeyCode.ENTER && currentFile != null) {
+                    openFile(currentFile);
+                }
+            }
+        });
+
+
+    }
+
+
+    private void openFile(File file) {
+        if (!file.isDirectory()) {
+
+
+            Runtime runtime = Runtime.getRuntime();
+            try {
+                runtime.exec("xdg-open " + file.getAbsolutePath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
         }
     }
+//    private void setImageForNode(TreeCell<File> t) {
+//        String pic = null;
+//        if (t.getTreeItem().getValue().isDirectory()) {
+//
+//            if (t.getTreeItem().isExpanded()) t.setGraphic(new ImageView(folderOpened));
+//            else t.setGraphic(new ImageView(folder));
+//        } else {
+//            pic = t.getTreeItem().getValue().getAbsolutePath();
+//            Image image = new Image("file:" + pic);
+//            if (image.isError()) {
+//                t.setGraphic(new ImageView(picFile));
+//            } else {
+//                ImageView imageView = new ImageView();
+//                imageView.setImage(image);
+//                imageView.setFitHeight(40);
+//                imageView.setFitWidth(40);
+//                imageView.setPreserveRatio(true);
+//                t.setGraphic(imageView);
+//            }
+//        }
+//    }
 
 
 

@@ -1,10 +1,10 @@
-package ru.alexsumin.util;
+package ru.alexsumin.filemanager.util;
 
-import ru.alexsumin.view.MainWindowController;
+import ru.alexsumin.filemanager.view.MainWindowController;
 
 import java.util.Comparator;
 
-public class DirectoryBeforeFileComparator implements Comparator<MainWindowController.TreeItemWithLoading> {
+public class DirectoryBeforeFileComparator implements Comparator<ru.alexsumin.filemanager.view.MainWindowController.TreeItemWithLoading> {
 
 
     @Override

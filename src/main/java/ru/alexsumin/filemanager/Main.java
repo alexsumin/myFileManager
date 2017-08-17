@@ -1,4 +1,4 @@
-package ru.alexsumin;
+package ru.alexsumin.filemanager;
 
 
 import javafx.application.Application;
