@@ -40,46 +40,15 @@ public class MyTreeCell extends TreeCell<File> {
         ProgressIndicator progressIndicator = new ProgressIndicator();
         progressIndicator.setMaxWidth(20);
 
-//        this.setOnMouseClicked(new EventHandler<MouseEvent>() {
-//            @Override
-//            public void handle(MouseEvent t) {
-//                if (t.getClickCount() == 2 && getItem() != null) {
-//                    System.out.println("DOUBLE CLICK!");
-//                    openFile(getItem());
-//                }
-//            }
-//
-//            private void openFile(File file) {
-//                if (!file.isDirectory()) {
-//
-//
-//                    Runtime runtime = Runtime.getRuntime();
-//                    try {
-//                        runtime.exec("xdg-open " + file.getAbsolutePath());
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//
-//
-//                }
-//            }
-//        });
-
-        this.setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                if (event.getCode() == KeyCode.F2 && getItem() != null) {
-                    startEdit();
-                }
-            }
-        });
+//        EventDispatcher original = this.getEventDispatcher();
+//        this.setEventDispatcher(new CellEventDispatcher(original));
 
 
         this.setPrefHeight(40);
+
         ChangeListener<Boolean> loadingChangeListener =
                 (ObservableValue<? extends Boolean> obs, Boolean wasLoading, Boolean isNowLoading) -> {
                     if (isNowLoading) {
-                        System.out.println("загрузка!");
                         this.setGraphic(progressIndicator);
                     } else {
                         setImageForNode(this);
@@ -108,7 +77,6 @@ public class MyTreeCell extends TreeCell<File> {
                     }
                 });
 
-
         this.itemProperty().addListener(
                 (ObservableValue<? extends File> obs, File oldItem, File newItem) -> {
                     if (newItem == null) {
@@ -119,16 +87,30 @@ public class MyTreeCell extends TreeCell<File> {
                     }
                 });
 
-
-        this.addEventHandler(MouseEvent.ANY, event -> {
-            if (event.getClickCount() == 2 && event.getButton().equals(MouseButton.PRIMARY)) {
-                if (event.getEventType().equals(MouseEvent.MOUSE_CLICKED)) {
-                    System.out.println("hello"); // perform some action
+        this.addEventFilter(MouseEvent.MOUSE_PRESSED, t -> {
+            if (t.getButton() == MouseButton.PRIMARY && t.getClickCount() == 2) {
+                if (!getItem().isDirectory()) {
+                    openFile(getItem());
                 }
-
-                event.consume();
             }
         });
+
+    }
+
+
+    private void openFile(File file) {
+        if (!file.isDirectory()) {
+
+
+            Runtime runtime = Runtime.getRuntime();
+            try {
+                runtime.exec("xdg-open " + file.getAbsolutePath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+        }
     }
 
     private void setImageForNode(TreeCell<File> t) {
@@ -154,7 +136,7 @@ public class MyTreeCell extends TreeCell<File> {
     }
 
 
-    @Override
+    //@Override
     public void cancelEdit() {
         super.cancelEdit();
 
@@ -250,5 +232,6 @@ public class MyTreeCell extends TreeCell<File> {
     private String getString() {
         return getItem() == null ? "" : getItem().toString();
     }
+
 
 }

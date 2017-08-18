@@ -2,15 +2,15 @@ package ru.alexsumin.filemanager.view;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
+import javafx.event.Event;
+import javafx.event.EventDispatchChain;
+import javafx.event.EventDispatcher;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
@@ -41,6 +41,7 @@ public class MainWindowController {
     Image pc = new Image(getClass().getResourceAsStream("/images/pc.png"), 30, 30, false, false);
     private File currentFile;
     private File copiedFile;
+    private TreeItem selectedCell;
 
     @FXML
     private void initialize() {
@@ -48,64 +49,15 @@ public class MainWindowController {
         treeView.setCellFactory(param -> new MyTreeCell());
         TreeItemWithLoading root = new TreeItemWithLoading(new File(System.getProperty("user.home")));
         treeView.setRoot(root);
-        treeView.setEditable(true);
+        treeView.setEditable(false);
+        EventDispatcher treeOriginal = treeView.getEventDispatcher();
+        treeView.setEventDispatcher(new CellEventDispatcher(treeOriginal));
 
-
-    }
-
-    private TreeCell<File> createTreeCell() {
-
-
-        ProgressIndicator progressIndicator = new ProgressIndicator();
-        progressIndicator.setMaxWidth(20);
-
-
-        TreeCell<File> cell = new TreeCell<>();
-        cell.setPrefHeight(40);
-        ChangeListener<Boolean> loadingChangeListener =
-                (ObservableValue<? extends Boolean> obs, Boolean wasLoading, Boolean isNowLoading) -> {
-                    if (isNowLoading) {
-                        cell.setGraphic(progressIndicator);
-                    } else {
-                        //setImageForNode(cell);
-                    }
-                };
-
-        cell.treeItemProperty().addListener(
-                (obs, oldItem, newItem) -> {
-
-                    if (oldItem != null) {
-                        TreeItemWithLoading oldLazyTreeItem = (TreeItemWithLoading) oldItem;
-                        oldLazyTreeItem.loadingProperty().removeListener(loadingChangeListener);
-                    }
-
-                    if (newItem != null) {
-                        TreeItemWithLoading newLazyTreeItem = (TreeItemWithLoading) newItem;
-                        newLazyTreeItem.loadingProperty().addListener(loadingChangeListener);
-
-                        if (newLazyTreeItem.isLoading()) {
-
-                            cell.setGraphic(progressIndicator);
-                        } else {
-                            cell.setGraphic(null);
-                            //setImageForNode(cell);
-                        }
-                    }
+        treeView.getSelectionModel()
+                .selectedItemProperty()
+                .addListener((observable, oldValue, newValue) -> {
+                    selectedCell = newValue;
                 });
-
-
-        cell.itemProperty().addListener(
-                (ObservableValue<? extends File> obs, File oldItem, File newItem) -> {
-                    if (newItem == null) {
-                        cell.setText(null);
-                        cell.setGraphic(null);
-                    } else {
-                        cell.setText(newItem.getName());
-                    }
-                });
-
-        return cell;
-
 
     }
 
@@ -133,7 +85,6 @@ public class MainWindowController {
 
     }
 
-
     private void openFile(File file) {
         if (!file.isDirectory()) {
 
@@ -148,29 +99,6 @@ public class MainWindowController {
 
         }
     }
-//    private void setImageForNode(TreeCell<File> t) {
-//        String pic = null;
-//        if (t.getTreeItem().getValue().isDirectory()) {
-//
-//            if (t.getTreeItem().isExpanded()) t.setGraphic(new ImageView(folderOpened));
-//            else t.setGraphic(new ImageView(folder));
-//        } else {
-//            pic = t.getTreeItem().getValue().getAbsolutePath();
-//            Image image = new Image("file:" + pic);
-//            if (image.isError()) {
-//                t.setGraphic(new ImageView(picFile));
-//            } else {
-//                ImageView imageView = new ImageView();
-//                imageView.setImage(image);
-//                imageView.setFitHeight(40);
-//                imageView.setFitWidth(40);
-//                imageView.setPreserveRatio(true);
-//                t.setGraphic(imageView);
-//            }
-//        }
-//    }
-
-
 
     public static class TreeItemWithLoading extends TreeItem<File> {
 
@@ -190,6 +118,8 @@ public class MainWindowController {
                     clearChildren();
                 }
             });
+
+
         }
 
         public final BooleanProperty loadingProperty() {
@@ -203,6 +133,7 @@ public class MainWindowController {
         public final void setLoading(final boolean loading) {
             this.loadingProperty().set(loading);
         }
+
 
         @Override
         public boolean isLeaf() {
@@ -256,6 +187,47 @@ public class MainWindowController {
 
         private void clearChildren() {
             getChildren().clear();
+        }
+    }
+//    private void setImageForNode(TreeCell<File> t) {
+//        String pic = null;
+//        if (t.getTreeItem().getValue().isDirectory()) {
+//
+//            if (t.getTreeItem().isExpanded()) t.setGraphic(new ImageView(folderOpened));
+//            else t.setGraphic(new ImageView(folder));
+//        } else {
+//            pic = t.getTreeItem().getValue().getAbsolutePath();
+//            Image image = new Image("file:" + pic);
+//            if (image.isError()) {
+//                t.setGraphic(new ImageView(picFile));
+//            } else {
+//                ImageView imageView = new ImageView();
+//                imageView.setImage(image);
+//                imageView.setFitHeight(40);
+//                imageView.setFitWidth(40);
+//                imageView.setPreserveRatio(true);
+//                t.setGraphic(imageView);
+//            }
+//        }
+//    }
+
+    class CellEventDispatcher implements EventDispatcher {
+
+        private final EventDispatcher original;
+
+        public CellEventDispatcher(EventDispatcher original) {
+            this.original = original;
+        }
+
+        @Override
+        public Event dispatchEvent(Event event, EventDispatchChain tail) {
+            if (event instanceof KeyEvent && event.getEventType().equals(KeyEvent.KEY_PRESSED)) {
+                if ((((KeyEvent) event).getCode().equals(KeyCode.LEFT) ||
+                        ((KeyEvent) event).getCode().equals(KeyCode.RIGHT))) {
+                    event.consume();
+                }
+            }
+            return original.dispatchEvent(event, tail);
         }
     }
 
