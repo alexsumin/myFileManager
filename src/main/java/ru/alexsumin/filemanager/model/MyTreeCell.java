@@ -230,17 +230,16 @@ public class MyTreeCell extends TreeCell<File> {
 
     private void setTooltipForFile(MyTreeCell cell) {
         File file = getItem();
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/mm/yyyy HH:mm");
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
         String type = (getItem().isDirectory()) ? "folder" : "file";
 
-        this.setTooltip(new Tooltip("File: \t\t" + file.getName() +
-                "\nType: \t" + type +
+        this.setTooltip(new Tooltip("Type: \t" + type +
                 "\nSize: \t" + fileSize(file) + "\n" + "Modified: \t" + sdf.format(file.lastModified())));
     }
 
 
     private String fileSize(File file) {
-        long length = 0;
+        long length;
         if (!file.isDirectory()) {
             length = file.length();
         } else {
