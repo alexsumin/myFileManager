@@ -4,10 +4,7 @@ import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TreeCell;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -21,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.text.SimpleDateFormat;
 
 public class MyTreeCell extends TreeCell<File> {
     Image picFile = new Image(getClass().getResourceAsStream("/images/file.png"), 30, 30, false, false);
@@ -43,8 +41,6 @@ public class MyTreeCell extends TreeCell<File> {
 //        EventDispatcher original = this.getEventDispatcher();
 //        this.setEventDispatcher(new CellEventDispatcher(original));
 
-
-        this.setPrefHeight(40);
 
         ChangeListener<Boolean> loadingChangeListener =
                 (ObservableValue<? extends Boolean> obs, Boolean wasLoading, Boolean isNowLoading) -> {
@@ -83,6 +79,8 @@ public class MyTreeCell extends TreeCell<File> {
                         this.setText(null);
                         this.setGraphic(null);
                     } else {
+                        setTooltipForFile(this);
+                        this.setPrefHeight(40);
                         this.setText(newItem.getName());
                     }
                 });
@@ -112,6 +110,7 @@ public class MyTreeCell extends TreeCell<File> {
 
         }
     }
+
 
     private void setImageForNode(TreeCell<File> t) {
         String pic = null;
@@ -228,6 +227,39 @@ public class MyTreeCell extends TreeCell<File> {
         }
     }
 
+
+    private void setTooltipForFile(MyTreeCell cell) {
+        File file = getItem();
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/mm/yyyy HH:mm");
+        String type = (getItem().isDirectory()) ? "folder" : "file";
+
+        this.setTooltip(new Tooltip("File: \t\t" + file.getName() +
+                "\nType: \t" + type +
+                "\nSize: \t" + fileSize(file) + "\n" + "Modified: \t" + sdf.format(file.lastModified())));
+    }
+
+
+    private String fileSize(File file) {
+        long length = 0;
+        if (!file.isDirectory()) {
+            length = file.length();
+        } else {
+            try {
+                length = Files.walk(file.toPath()).mapToLong(p -> p.toFile().length()).sum();
+            } catch (Exception e) {
+                return "unavailable";
+            }
+        }
+        if (length > 1024 * 1024) {
+            return length / 1024 / 1024 + " Mb";
+        } else if (length > 1024) {
+            return length / 1024 + " Kb";
+        } else {
+            return length + " b";
+        }
+
+
+    }
 
     private String getString() {
         return getItem() == null ? "" : getItem().toString();

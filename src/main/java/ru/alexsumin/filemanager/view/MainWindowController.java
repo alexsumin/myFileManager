@@ -9,19 +9,16 @@ import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.event.EventDispatchChain;
 import javafx.event.EventDispatcher;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
 import ru.alexsumin.filemanager.model.MyTreeCell;
 import ru.alexsumin.filemanager.util.DirectoryBeforeFileComparator;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -59,46 +56,10 @@ public class MainWindowController {
                     selectedCell = newValue;
                 });
 
-    }
-
-    private void configureTreeView(TreeView treeView) {
-
-        treeView.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent t) {
-                if (t.getClickCount() == 2 && currentFile != null) {
-                    System.out.println("DOUBLE CLICK!");
-                    openFile(currentFile);
-                }
-            }
-        });
-
-        treeView.setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                if (event.getCode() == KeyCode.ENTER && currentFile != null) {
-                    openFile(currentFile);
-                }
-            }
-        });
-
 
     }
 
-    private void openFile(File file) {
-        if (!file.isDirectory()) {
 
-
-            Runtime runtime = Runtime.getRuntime();
-            try {
-                runtime.exec("xdg-open " + file.getAbsolutePath());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-
-        }
-    }
 
     public static class TreeItemWithLoading extends TreeItem<File> {
 
@@ -189,27 +150,7 @@ public class MainWindowController {
             getChildren().clear();
         }
     }
-//    private void setImageForNode(TreeCell<File> t) {
-//        String pic = null;
-//        if (t.getTreeItem().getValue().isDirectory()) {
-//
-//            if (t.getTreeItem().isExpanded()) t.setGraphic(new ImageView(folderOpened));
-//            else t.setGraphic(new ImageView(folder));
-//        } else {
-//            pic = t.getTreeItem().getValue().getAbsolutePath();
-//            Image image = new Image("file:" + pic);
-//            if (image.isError()) {
-//                t.setGraphic(new ImageView(picFile));
-//            } else {
-//                ImageView imageView = new ImageView();
-//                imageView.setImage(image);
-//                imageView.setFitHeight(40);
-//                imageView.setFitWidth(40);
-//                imageView.setPreserveRatio(true);
-//                t.setGraphic(imageView);
-//            }
-//        }
-//    }
+
 
     class CellEventDispatcher implements EventDispatcher {
 
