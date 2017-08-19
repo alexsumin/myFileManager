@@ -75,9 +75,9 @@
                                 <Button fx:id="removeButton" maxWidth="80.0" minWidth="80.0" mnemonicParsing="false"
                                         text="Remove"/>
                                 <Button fx:id="newDirButton" maxWidth="80.0" minWidth="80.0" mnemonicParsing="false"
-                                        onAction="#createDirectory" text="New Dir"/>
+                                        onAction="#createNewItemDirectory" text="New Dir"/>
                                 <Button fx:id="openButton" maxWidth="80.0" minWidth="80.0" mnemonicParsing="false"
-                                        text="Open"/>
+                                        onAction="#openFile" text="Open"/>
                             </children>
                             <GridPane.margin>
                                 <Insets top="10.0"/>

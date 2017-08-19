@@ -9,8 +9,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import ru.alexsumin.filemanager.view.MainWindowController;
 
 import java.io.File;
@@ -80,30 +78,16 @@ public class MyTreeCell extends TreeCell<File> {
                     }
                 });
 
-        this.addEventFilter(MouseEvent.MOUSE_PRESSED, t -> {
-            if (t.getButton() == MouseButton.PRIMARY && t.getClickCount() == 2) {
-                if (!getItem().isDirectory()) {
-                    openFile(getItem());
-                }
-            }
-        });
+//        this.addEventFilter(MouseEvent.MOUSE_PRESSED, t -> {
+//            if (t.getButton() == MouseButton.PRIMARY && t.getClickCount() == 2) {
+//                if (!getItem().isDirectory()) {
+//                    openFile(getItem());
+//                }
+//            }
+//        });
 
     }
 
-    private void openFile(File file) {
-        if (!file.isDirectory()) {
-
-
-            Runtime runtime = Runtime.getRuntime();
-            try {
-                runtime.exec("xdg-open " + file.getAbsolutePath());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-
-        }
-    }
 
     private void setImageForNode(TreeCell<File> t) {
         String pic = null;
@@ -204,20 +188,20 @@ public class MyTreeCell extends TreeCell<File> {
 
     @Override
     public void startEdit() {
-        super.startEdit();
-
-        if (textField == null) {
-            createTextField();
-        }
-        setText(null);
-        setGraphic(textField);
-        textField.selectAll();
-        if (getItem() == null) {
-            editingPath = null;
-        } else {
-            editingPath = (getItem().getParent() + File.separator + textField.getText());
-            System.out.println(editingPath);
-        }
+//        super.startEdit();
+//
+//        if (textField == null) {
+//            createTextField();
+//        }
+//        setText(null);
+//        setGraphic(textField);
+//        textField.selectAll();
+//        if (getItem() == null) {
+//            editingPath = null;
+//        } else {
+//            editingPath = (getItem().getParent() + File.separator + textField.getText());
+//            System.out.println(editingPath);
+//        }
     }
 
 
@@ -225,9 +209,9 @@ public class MyTreeCell extends TreeCell<File> {
         File file = getItem();
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
         String type = (getItem().isDirectory()) ? "folder" : "file";
-
         this.setTooltip(new Tooltip("Type: \t" + type +
                 "\nSize: \t" + fileSize(file) + "\n" + "Modified: \t" + sdf.format(file.lastModified())));
+
     }
 
 

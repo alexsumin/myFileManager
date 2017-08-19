@@ -1,5 +1,6 @@
 package ru.alexsumin.filemanager.view;
 
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableValue;
@@ -17,6 +18,7 @@ import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import org.apache.commons.lang3.SystemUtils;
 import ru.alexsumin.filemanager.model.MyTreeCell;
 import ru.alexsumin.filemanager.util.DirectoryBeforeFileComparator;
 
@@ -28,6 +30,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 
 public class MainWindowController {
 
@@ -60,12 +63,13 @@ public class MainWindowController {
     private File copiedFile;
     private TreeItemWithLoading selectedItem;
 
+
     @FXML
     private void initialize() {
         treeView.setCellFactory(param -> new MyTreeCell());
         TreeItemWithLoading root = new TreeItemWithLoading(new File(System.getProperty("user.home")));
         treeView.setRoot(root);
-        treeView.setEditable(false);
+        treeView.setEditable(true);
         EventDispatcher treeOriginal = treeView.getEventDispatcher();
         treeView.setEventDispatcher(new CellEventDispatcher(treeOriginal));
 
@@ -75,26 +79,55 @@ public class MainWindowController {
                     selectedItem = (TreeItemWithLoading) newValue;
                 });
 
+        treeView.setOnMouseClicked(t -> {
+            if (t.getClickCount() == 2 && selectedItem != null) {
+                openFile();
+            }
+        });
+
 
     }
 
     @FXML
-    private void createDirectory(final ActionEvent event) {
+    private void openFile() {
+        if (!selectedItem.getValue().isDirectory()) {
+            if (!SystemUtils.IS_OS_WINDOWS) {
+
+                Runtime runtime = Runtime.getRuntime();
+                try {
+                    runtime.exec("xdg-open " + selectedItem.getValue().getAbsolutePath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            ;
+        } else {
+            selectedItem.setExpanded(!selectedItem.isExpanded());
+        }
+    }
+
+
+    @FXML
+    private void createNewItemDirectory(final ActionEvent event) {
 
         if (selectedItem != null && selectedItem.getValue() != null) {
-            String newD = create();
+            String newD = createDirectory();
             if (newD != null) {
                 TreeItemWithLoading addItem = new TreeItemWithLoading(new File(newD));
-                selectedItem.getParent().getChildren().add(addItem);
+                if (selectedItem.isLeaf) selectedItem.setLeaf(false);
+                if (selectedItem.isExpanded()) {
+
+                    selectedItem.getChildren().add(addItem);
+                }
             }
 
 
         }
     }
 
-    private String create() {
+    private String createDirectory() {
         File file = (File) selectedItem.getValue();
-        String parent = file.getParent();
+        String parent = file.getPath();
         String newDir;
         while (true) {
             newDir = parent + File.separator + "NewDirectory" + String.valueOf(selectedItem.getNewDirCount());
@@ -121,6 +154,7 @@ public class MainWindowController {
         private boolean isFirstTimeLeaf = true;
         private int newDirCount = 0;
 
+
         public TreeItemWithLoading(File value) {
             super(value);
 
@@ -134,6 +168,10 @@ public class MainWindowController {
             });
 
 
+        }
+
+        public void setFirstTimeLeaf(boolean firstTimeLeaf) {
+            isFirstTimeLeaf = firstTimeLeaf;
         }
 
         public int getNewDirCount() {
@@ -152,7 +190,6 @@ public class MainWindowController {
             this.loadingProperty().set(loading);
         }
 
-
         @Override
         public boolean isLeaf() {
             if (isFirstTimeLeaf) {
@@ -164,6 +201,9 @@ public class MainWindowController {
             return isLeaf;
         }
 
+        public void setLeaf(boolean leaf) {
+            isLeaf = leaf;
+        }
 
         private void loadChildrenLazily() {
             setLoading(true);
