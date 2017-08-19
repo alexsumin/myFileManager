@@ -73,7 +73,7 @@
                                 <Button fx:id="renameButton" maxWidth="80.0" minWidth="80.0" mnemonicParsing="false"
                                         text="Rename"/>
                                 <Button fx:id="removeButton" maxWidth="80.0" minWidth="80.0" mnemonicParsing="false"
-                                        text="Remove"/>
+                                        onAction="#deleteFile" text="Remove"/>
                                 <Button fx:id="newDirButton" maxWidth="80.0" minWidth="80.0" mnemonicParsing="false"
                                         onAction="#createNewItemDirectory" text="New Dir"/>
                                 <Button fx:id="openButton" maxWidth="80.0" minWidth="80.0" mnemonicParsing="false"

@@ -18,6 +18,7 @@ import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
 import ru.alexsumin.filemanager.model.MyTreeCell;
 import ru.alexsumin.filemanager.util.DirectoryBeforeFileComparator;
@@ -85,6 +86,20 @@ public class MainWindowController {
             }
         });
 
+
+    }
+
+    @FXML
+    private void deleteFile() {
+        if (selectedItem != null) {
+            try {
+                FileUtils.deleteDirectory(selectedItem.getValue());
+            } catch (Exception e) {
+                //TODO: окошко с ошибкой
+                e.printStackTrace();
+            }
+            selectedItem.getParent().getChildren().remove(selectedItem);
+        }
 
     }
 
