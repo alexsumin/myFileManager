@@ -34,13 +34,8 @@ public class MyTreeCell extends TreeCell<File> {
 
     public MyTreeCell() {
 
-
         ProgressIndicator progressIndicator = new ProgressIndicator();
         progressIndicator.setMaxWidth(20);
-
-//        EventDispatcher original = this.getEventDispatcher();
-//        this.setEventDispatcher(new CellEventDispatcher(original));
-
 
         ChangeListener<Boolean> loadingChangeListener =
                 (ObservableValue<? extends Boolean> obs, Boolean wasLoading, Boolean isNowLoading) -> {
@@ -95,7 +90,6 @@ public class MyTreeCell extends TreeCell<File> {
 
     }
 
-
     private void openFile(File file) {
         if (!file.isDirectory()) {
 
@@ -110,7 +104,6 @@ public class MyTreeCell extends TreeCell<File> {
 
         }
     }
-
 
     private void setImageForNode(TreeCell<File> t) {
         String pic = null;
@@ -256,8 +249,6 @@ public class MyTreeCell extends TreeCell<File> {
         } else {
             return length + " b";
         }
-
-
     }
 
     private String getString() {

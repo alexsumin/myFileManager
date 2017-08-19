@@ -64,13 +64,20 @@
                         <TreeView fx:id="treeView" prefHeight="200.0" prefWidth="200.0"/>
                         <HBox spacing="10.0" stylesheets="@BasicApplication.css" GridPane.rowIndex="1">
                             <children>
-                                <Button maxWidth="80.0" minWidth="80.0" mnemonicParsing="false" text="Copy"/>
-                                <Button maxWidth="80.0" minWidth="80.0" mnemonicParsing="false" text="Cut"/>
-                                <Button maxWidth="80.0" minWidth="80.0" mnemonicParsing="false" text="Paste"/>
-                                <Button maxWidth="80.0" minWidth="80.0" mnemonicParsing="false" text="Rename"/>
-                                <Button maxWidth="80.0" minWidth="80.0" mnemonicParsing="false" text="Remove"/>
-                                <Button maxWidth="80.0" minWidth="80.0" mnemonicParsing="false" text="New Dir"/>
-                                <Button maxWidth="80.0" minWidth="80.0" mnemonicParsing="false" text="Open"/>
+                                <Button fx:id="copyButton" maxWidth="80.0" minWidth="80.0" mnemonicParsing="false"
+                                        text="Copy"/>
+                                <Button fx:id="cutButton" maxWidth="80.0" minWidth="80.0" mnemonicParsing="false"
+                                        text="Cut"/>
+                                <Button fx:id="pasteButton" maxWidth="80.0" minWidth="80.0" mnemonicParsing="false"
+                                        text="Paste"/>
+                                <Button fx:id="renameButton" maxWidth="80.0" minWidth="80.0" mnemonicParsing="false"
+                                        text="Rename"/>
+                                <Button fx:id="removeButton" maxWidth="80.0" minWidth="80.0" mnemonicParsing="false"
+                                        text="Remove"/>
+                                <Button fx:id="newDirButton" maxWidth="80.0" minWidth="80.0" mnemonicParsing="false"
+                                        onAction="#createDirectory" text="New Dir"/>
+                                <Button fx:id="openButton" maxWidth="80.0" minWidth="80.0" mnemonicParsing="false"
+                                        text="Open"/>
                             </children>
                             <GridPane.margin>
                                 <Insets top="10.0"/>

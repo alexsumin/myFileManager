@@ -6,10 +6,12 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventDispatchChain;
 import javafx.event.EventDispatcher;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
@@ -19,6 +21,10 @@ import ru.alexsumin.filemanager.model.MyTreeCell;
 import ru.alexsumin.filemanager.util.DirectoryBeforeFileComparator;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,19 +36,32 @@ public class MainWindowController {
         t.setDaemon(true);
         return t;
     });
-    @FXML
-    TreeView<File> treeView = new TreeView<>();
     Image picFile = new Image(getClass().getResourceAsStream("/images/file.png"), 30, 30, false, false);
     Image folder = new Image(getClass().getResourceAsStream("/images/folder.png"), 30, 30, false, false);
     Image folderOpened = new Image(getClass().getResourceAsStream("/images/openedfolder.png"), 30, 30, false, false);
     Image pc = new Image(getClass().getResourceAsStream("/images/pc.png"), 30, 30, false, false);
+    @FXML
+    private TreeView<File> treeView = new TreeView<>();
+    @FXML
+    private Button copyButton = new Button();
+    @FXML
+    private Button cutButton = new Button();
+    @FXML
+    private Button pasteButton = new Button();
+    @FXML
+    private Button renameButton = new Button();
+    @FXML
+    private Button removeButton = new Button();
+    @FXML
+    private Button newDirButton = new Button();
+    @FXML
+    private Button openButton = new Button();
     private File currentFile;
     private File copiedFile;
-    private TreeItem selectedCell;
+    private TreeItemWithLoading selectedItem;
 
     @FXML
     private void initialize() {
-        //treeView.setCellFactory(param -> this.createTreeCell());
         treeView.setCellFactory(param -> new MyTreeCell());
         TreeItemWithLoading root = new TreeItemWithLoading(new File(System.getProperty("user.home")));
         treeView.setRoot(root);
@@ -53,12 +72,45 @@ public class MainWindowController {
         treeView.getSelectionModel()
                 .selectedItemProperty()
                 .addListener((observable, oldValue, newValue) -> {
-                    selectedCell = newValue;
+                    selectedItem = (TreeItemWithLoading) newValue;
                 });
 
 
     }
 
+    @FXML
+    private void createDirectory(final ActionEvent event) {
+
+        if (selectedItem != null && selectedItem.getValue() != null) {
+            String newD = create();
+            if (newD != null) {
+                TreeItemWithLoading addItem = new TreeItemWithLoading(new File(newD));
+                selectedItem.getParent().getChildren().add(addItem);
+            }
+
+
+        }
+    }
+
+    private String create() {
+        File file = (File) selectedItem.getValue();
+        String parent = file.getParent();
+        String newDir;
+        while (true) {
+            newDir = parent + File.separator + "NewDirectory" + String.valueOf(selectedItem.getNewDirCount());
+            try {
+                Files.createDirectory(Paths.get(newDir));
+                break;
+            } catch (FileAlreadyExistsException e) {
+                continue;
+            } catch (IOException e) {
+                //TODO: окно с ошибкой
+                e.printStackTrace();
+            }
+        }
+        return newDir;
+
+    }
 
 
     public static class TreeItemWithLoading extends TreeItem<File> {
@@ -67,6 +119,7 @@ public class MainWindowController {
 
         private boolean isLeaf = true;
         private boolean isFirstTimeLeaf = true;
+        private int newDirCount = 0;
 
         public TreeItemWithLoading(File value) {
             super(value);
@@ -81,6 +134,10 @@ public class MainWindowController {
             });
 
 
+        }
+
+        public int getNewDirCount() {
+            return ++this.newDirCount;
         }
 
         public final BooleanProperty loadingProperty() {
@@ -149,6 +206,8 @@ public class MainWindowController {
         private void clearChildren() {
             getChildren().clear();
         }
+
+
     }
 
 
