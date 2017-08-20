@@ -62,6 +62,9 @@ public class MainWindowController {
     private Button openButton = new Button();
     private File currentFile;
     private File copiedFile;
+    private File target;
+    private String tempFile;
+    private boolean isCutted;
     private TreeItemWithLoading selectedItem;
 
 
@@ -115,28 +118,85 @@ public class MainWindowController {
                     e.printStackTrace();
                 }
             }
-            ;
+
         } else {
             selectedItem.setExpanded(!selectedItem.isExpanded());
+        }
+    }
+
+    @FXML
+    private void copyFile() {
+        if (selectedItem != null) {
+            copiedFile = selectedItem.getValue();
+        }
+    }
+
+    @FXML
+    private void cutFile() {
+        if (selectedItem != null) {
+            copiedFile = selectedItem.getValue();
+        }
+        isCutted = true;
+        selectedItem.getParent().getChildren().remove(selectedItem);
+    }
+
+    @FXML
+    private void pasteFile() {
+
+        if (selectedItem != null && copiedFile != null) {
+            target = (selectedItem.getValue().isDirectory()) ? selectedItem.getValue() : selectedItem.getParent().getValue();
+            tempFile = copiedFile.getName();
+            try {
+                if (isCutted) {
+                    if (copiedFile.isDirectory()) {
+                        FileUtils.moveDirectoryToDirectory(copiedFile, target, false);
+                        FileUtils.deleteDirectory(copiedFile);
+                    } else {
+                        FileUtils.moveFileToDirectory(copiedFile, target, false);
+                        copiedFile.delete();
+                    }
+                    isCutted = false;
+                    copiedFile = null;
+                } else {
+                    if (new File("" + target + File.separator + copiedFile.getName()).exists()) {
+                        throw new IOException("File already exists");
+                    }
+                    if (copiedFile.isDirectory()) {
+                        FileUtils.copyDirectoryToDirectory(copiedFile, target);
+                    } else {
+                        FileUtils.copyFileToDirectory(copiedFile, target);
+
+                    }
+                }
+                addNewItemAfterIO();
+            } catch (Exception e) {
+                e.printStackTrace();
+                //TODO: окно с ошибкой
+            }
+            target = null;
+        }
+    }
+
+    private void addNewItemAfterIO() {
+        TreeItemWithLoading addItem = new TreeItemWithLoading(new File("" + target + File.separator + tempFile));
+        if (selectedItem.isLeaf) selectedItem.setLeaf(false);
+        if (selectedItem.isExpanded()) {
+            selectedItem.getChildren().add(addItem);
         }
     }
 
 
     @FXML
     private void createNewItemDirectory(final ActionEvent event) {
-
         if (selectedItem != null && selectedItem.getValue() != null) {
             String newD = createDirectory();
             if (newD != null) {
                 TreeItemWithLoading addItem = new TreeItemWithLoading(new File(newD));
                 if (selectedItem.isLeaf) selectedItem.setLeaf(false);
                 if (selectedItem.isExpanded()) {
-
                     selectedItem.getChildren().add(addItem);
                 }
             }
-
-
         }
     }
 
@@ -157,7 +217,6 @@ public class MainWindowController {
             }
         }
         return newDir;
-
     }
 
 
@@ -241,7 +300,7 @@ public class MainWindowController {
                     }
                     FXCollections.sort(children, new DirectoryBeforeFileComparator());
 
-                    Thread.sleep(2000);
+                    //Thread.sleep(2000);
                     return children;
                 }
             };
