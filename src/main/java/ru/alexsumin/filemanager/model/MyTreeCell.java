@@ -9,7 +9,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import ru.alexsumin.filemanager.view.MainWindowController;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,12 +47,12 @@ public class MyTreeCell extends TreeCell<File> {
                 (obs, oldItem, newItem) -> {
 
                     if (oldItem != null) {
-                        MainWindowController.TreeItemWithLoading oldLazyTreeItem = (MainWindowController.TreeItemWithLoading) oldItem;
+                        TreeItemWithLoading oldLazyTreeItem = (TreeItemWithLoading) oldItem;
                         oldLazyTreeItem.loadingProperty().removeListener(loadingChangeListener);
                     }
 
                     if (newItem != null) {
-                        MainWindowController.TreeItemWithLoading newLazyTreeItem = (MainWindowController.TreeItemWithLoading) newItem;
+                        TreeItemWithLoading newLazyTreeItem = (TreeItemWithLoading) newItem;
                         newLazyTreeItem.loadingProperty().addListener(loadingChangeListener);
 
                         if (newLazyTreeItem.isLoading()) {

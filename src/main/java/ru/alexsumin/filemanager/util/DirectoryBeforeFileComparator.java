@@ -1,14 +1,14 @@
 package ru.alexsumin.filemanager.util;
 
-import ru.alexsumin.filemanager.view.MainWindowController;
+import ru.alexsumin.filemanager.model.TreeItemWithLoading;
 
 import java.util.Comparator;
 
-public class DirectoryBeforeFileComparator implements Comparator<ru.alexsumin.filemanager.view.MainWindowController.TreeItemWithLoading> {
+public class DirectoryBeforeFileComparator implements Comparator<TreeItemWithLoading> {
 
 
     @Override
-    public int compare(MainWindowController.TreeItemWithLoading t1, MainWindowController.TreeItemWithLoading t2) {
+    public int compare(TreeItemWithLoading t1, TreeItemWithLoading t2) {
         if (t1.getValue().isDirectory() && !t2.getValue().isDirectory()) {
             // directory before non-directory.
             return -1;
