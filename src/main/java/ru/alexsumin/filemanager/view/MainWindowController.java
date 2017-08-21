@@ -1,6 +1,7 @@
 package ru.alexsumin.filemanager.view;
 
 
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableValue;
@@ -16,6 +17,9 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.stage.Stage;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
 import ru.alexsumin.filemanager.model.MyTreeCell;
@@ -23,6 +27,8 @@ import ru.alexsumin.filemanager.util.DirectoryBeforeFileComparator;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -124,11 +130,55 @@ public class MainWindowController {
             Files.move(Paths.get(selectedItem.getValue().getAbsolutePath()),
                     Paths.get(newPath), StandardCopyOption.ATOMIC_MOVE);
         } catch (IOException e) {
-            e.printStackTrace();
+            showExceptionDialog(e);
         }
         selectedItem.getParent().getChildren().remove(selectedItem);
         addNewItemAfterIO(newPath);
 
+    }
+
+    private void showExceptionDialog(Exception ex) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+
+        alert.setTitle("Exception Dialog");
+        alert.setHeight(400);
+        alert.setHeaderText("Ooops, Exception here");
+        alert.setContentText(ex.getMessage());
+
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        ex.printStackTrace(pw);
+        String exceptionText = sw.toString();
+
+        Label label = new Label("The exception stacktrace was:");
+
+        TextArea textArea = new TextArea(exceptionText);
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+
+        textArea.setMaxWidth(Double.MAX_VALUE);
+        textArea.setMaxHeight(Double.MAX_VALUE);
+        GridPane.setVgrow(textArea, Priority.ALWAYS);
+        GridPane.setHgrow(textArea, Priority.ALWAYS);
+
+        GridPane expContent = new GridPane();
+        expContent.add(label, 0, 0);
+        expContent.add(textArea, 0, 1);
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.getStylesheets().add(
+                getClass().getResource("/view/BasicApplication.css").toExternalForm());
+
+
+        alert.getDialogPane().setExpandableContent(expContent);
+        alert.getDialogPane().expandedProperty().addListener((l) -> {
+            Platform.runLater(() -> {
+                alert.getDialogPane().requestLayout();
+                Stage stage = (Stage) alert.getDialogPane().getScene().getWindow();
+                stage.sizeToScene();
+            });
+        });
+
+        alert.showAndWait();
     }
 
     @FXML
@@ -136,9 +186,8 @@ public class MainWindowController {
         if (selectedItem != null) {
             try {
                 FileUtils.deleteDirectory(selectedItem.getValue());
-            } catch (Exception e) {
-                //TODO: окошко с ошибкой
-                e.printStackTrace();
+            } catch (IOException e) {
+                showExceptionDialog(e);
             }
             selectedItem.getParent().getChildren().remove(selectedItem);
         }
@@ -198,7 +247,7 @@ public class MainWindowController {
                     copiedFile = null;
                 } else {
                     if (new File("" + target + File.separator + copiedFile.getName()).exists()) {
-                        throw new IOException("File already exists");
+                        throw new IOException();
                     }
                     if (copiedFile.isDirectory()) {
                         FileUtils.copyDirectoryToDirectory(copiedFile, target);
@@ -208,16 +257,14 @@ public class MainWindowController {
                     }
                 }
                 addNewItemAfterIO("" + target + File.separator + tempFile);
-            } catch (Exception e) {
-                e.printStackTrace();
-                //TODO: окно с ошибкой
+            } catch (IOException e) {
+                showExceptionDialog(e);
             }
             target = null;
         }
     }
 
     private void addNewItemAfterIO(String newName) {
-//        TreeItemWithLoading addItem = new TreeItemWithLoading(new File("" + target + File.separator + tempFile));
         TreeItemWithLoading addItem = new TreeItemWithLoading(new File(newName));
         if (selectedItem.isLeaf) selectedItem.setLeaf(false);
         if (selectedItem.isExpanded()) {
@@ -252,8 +299,7 @@ public class MainWindowController {
             } catch (FileAlreadyExistsException e) {
                 continue;
             } catch (IOException e) {
-                //TODO: окно с ошибкой
-                e.printStackTrace();
+                showExceptionDialog(e);
             }
         }
         return newDir;
@@ -348,7 +394,6 @@ public class MainWindowController {
 
             loadTask.setOnSucceeded(event -> {
                 List<TreeItemWithLoading> children = loadTask.getValue();
-                isLeaf = children.size() == 0;
                 getChildren().setAll(children);
                 setLoading(false);
 
