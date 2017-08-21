@@ -78,13 +78,7 @@ public class MyTreeCell extends TreeCell<File> {
                     }
                 });
 
-//        this.addEventFilter(MouseEvent.MOUSE_PRESSED, t -> {
-//            if (t.getButton() == MouseButton.PRIMARY && t.getClickCount() == 2) {
-//                if (!getItem().isDirectory()) {
-//                    openFile(getItem());
-//                }
-//            }
-//        });
+//
 
     }
 

@@ -12,9 +12,7 @@ import javafx.event.Event;
 import javafx.event.EventDispatchChain;
 import javafx.event.EventDispatcher;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -28,6 +26,7 @@ import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -89,6 +88,46 @@ public class MainWindowController {
             }
         });
 
+
+    }
+
+
+    @FXML
+    private void openRenameDialog() {
+
+        TextInputDialog dialog = new TextInputDialog(selectedItem.getValue().getName());
+        dialog.setTitle("Renaming file");
+
+        dialog.setHeaderText("Rename file: " + selectedItem.getValue().getName());
+        dialog.setContentText("Please enter new name: ");
+
+        DialogPane dialogPane = dialog.getDialogPane();
+        dialogPane.getStylesheets().add(
+                getClass().getResource("/view/BasicApplication.css").toExternalForm());
+
+        dialog.showAndWait().ifPresent(response -> {
+            if (response != null) {
+                renameFile(response);
+
+            }
+        });
+
+
+    }
+
+    private void renameFile(String newName) {
+        System.out.println(selectedItem.getValue().getAbsolutePath());
+        System.out.println(selectedItem.getParent().getValue().getAbsolutePath());
+        System.out.println(newName);
+        String newPath = selectedItem.getParent().getValue().getAbsolutePath() + File.separator + newName;
+        try {
+            Files.move(Paths.get(selectedItem.getValue().getAbsolutePath()),
+                    Paths.get(newPath), StandardCopyOption.ATOMIC_MOVE);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        selectedItem.getParent().getChildren().remove(selectedItem);
+        addNewItemAfterIO(newPath);
 
     }
 
@@ -168,7 +207,7 @@ public class MainWindowController {
 
                     }
                 }
-                addNewItemAfterIO();
+                addNewItemAfterIO("" + target + File.separator + tempFile);
             } catch (Exception e) {
                 e.printStackTrace();
                 //TODO: окно с ошибкой
@@ -177,8 +216,9 @@ public class MainWindowController {
         }
     }
 
-    private void addNewItemAfterIO() {
-        TreeItemWithLoading addItem = new TreeItemWithLoading(new File("" + target + File.separator + tempFile));
+    private void addNewItemAfterIO(String newName) {
+//        TreeItemWithLoading addItem = new TreeItemWithLoading(new File("" + target + File.separator + tempFile));
+        TreeItemWithLoading addItem = new TreeItemWithLoading(new File(newName));
         if (selectedItem.isLeaf) selectedItem.setLeaf(false);
         if (selectedItem.isExpanded()) {
             selectedItem.getChildren().add(addItem);

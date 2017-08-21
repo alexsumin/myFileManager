@@ -71,7 +71,7 @@
                                 <Button fx:id="pasteButton" maxWidth="80.0" minWidth="80.0" mnemonicParsing="false"
                                         onAction="#pasteFile" text="Paste"/>
                                 <Button fx:id="renameButton" maxWidth="80.0" minWidth="80.0" mnemonicParsing="false"
-                                        text="Rename"/>
+                                        onAction="#openRenameDialog" text="Rename"/>
                                 <Button fx:id="removeButton" maxWidth="80.0" minWidth="80.0" mnemonicParsing="false"
                                         onAction="#deleteFile" text="Remove"/>
                                 <Button fx:id="newDirButton" maxWidth="80.0" minWidth="80.0" mnemonicParsing="false"
