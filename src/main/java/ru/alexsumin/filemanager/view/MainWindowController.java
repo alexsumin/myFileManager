@@ -9,6 +9,7 @@ import javafx.event.EventDispatcher;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
@@ -23,10 +24,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.file.*;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -38,6 +39,7 @@ public class MainWindowController {
         t.setDaemon(true);
         return t;
     });
+    public boolean isWindows;
     Image picFile = new Image(getClass().getResourceAsStream("/images/file.png"), 30, 30, false, false);
     Image folder = new Image(getClass().getResourceAsStream("/images/folder.png"), 30, 30, false, false);
     Image folderOpened = new Image(getClass().getResourceAsStream("/images/openedfolder.png"), 30, 30, false, false);
@@ -64,16 +66,58 @@ public class MainWindowController {
     private String tempFile;
     private boolean isCutted;
     private TreeItemWithLoading selectedItem;
+    private List<TreeItemWithLoading> systemDirectories;
 
 
     @FXML
     private void initialize() {
+        isWindows = isWindows();
         treeView.setCellFactory(param -> new MyTreeCell());
-        TreeItemWithLoading root = new TreeItemWithLoading(new File(System.getProperty("user.home")));
+        configureTreeView(treeView);
+
+
+    }
+
+    private void configureTreeView(TreeView treeView) {
+
+        TreeItemWithLoading root;
+
+        if (isWindows()) {
+            String hostName = "MyPC";
+            try {
+                hostName = InetAddress.getLocalHost().getHostName();
+                System.out.println(hostName);
+            } catch (UnknownHostException x) {
+            }
+
+            root = new TreeItemWithLoading(new File(hostName));
+            root.setGraphic(new ImageView(pc));
+
+
+            Iterable<Path> rootDirectories = FileSystems.getDefault().getRootDirectories();
+
+            for (Path name : rootDirectories) {
+                File f = new File(name.toAbsolutePath().toString());
+                TreeItemWithLoading systemNode = new TreeItemWithLoading(f);
+
+                root.getChildren().add(systemNode);
+                systemDirectories.add(systemNode);
+            }
+
+        } else {
+            //root = new TreeItemWithLoading(new File(System.getProperty("user.home")));
+            //root = new TreeItemWithLoading(new File());
+            root = new TreeItemWithLoading(new File("/"));
+
+
+        }
+
         treeView.setRoot(root);
+        //root.setExpanded(true);
         treeView.setEditable(true);
         EventDispatcher treeOriginal = treeView.getEventDispatcher();
         treeView.setEventDispatcher(new CellEventDispatcher(treeOriginal));
+
 
         treeView.getSelectionModel()
                 .selectedItemProperty()
@@ -88,8 +132,8 @@ public class MainWindowController {
         });
 
 
-    }
 
+    }
 
     @FXML
     private void openRenameDialog() {
@@ -171,6 +215,10 @@ public class MainWindowController {
         alert.showAndWait();
     }
 
+    private boolean isWindows() {
+        return SystemUtils.IS_OS_WINDOWS;
+    }
+
     @FXML
     private void deleteFile() {
         if (selectedItem != null) {
@@ -193,8 +241,19 @@ public class MainWindowController {
                 try {
                     runtime.exec("xdg-open " + selectedItem.getValue().getAbsolutePath());
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    showExceptionDialog(e);
                 }
+            } else {
+                {
+
+                    Runtime runtime = Runtime.getRuntime();
+                    try {
+                        runtime.exec("xdg-open " + selectedItem.getValue().getAbsolutePath());
+                    } catch (IOException e) {
+                        showExceptionDialog(e);
+                    }
+                }
+
             }
 
         } else {

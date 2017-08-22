@@ -1,33 +1,20 @@
 package ru.alexsumin.filemanager.model;
 
-import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.event.EventHandler;
-import javafx.scene.control.*;
+import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.Tooltip;
+import javafx.scene.control.TreeCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 
 public class MyTreeCell extends TreeCell<File> {
     Image picFile = new Image(getClass().getResourceAsStream("/images/file.png"), 30, 30, false, false);
     Image folder = new Image(getClass().getResourceAsStream("/images/folder.png"), 30, 30, false, false);
     Image folderOpened = new Image(getClass().getResourceAsStream("/images/openedfolder.png"), 30, 30, false, false);
-    Image pc = new Image(getClass().getResourceAsStream("/images/pc.png"), 30, 30, false, false);
-    private TextField textField;
-    private String editingPath;
-    private StringProperty messageProp;
-    private ContextMenu dirMenu = new ContextMenu();
-    private ContextMenu fileMenu = new ContextMenu();
-
 
     public MyTreeCell() {
 
@@ -73,11 +60,14 @@ public class MyTreeCell extends TreeCell<File> {
                     } else {
                         setTooltipForFile(this);
                         this.setPrefHeight(40);
-                        this.setText(newItem.getName());
+                        //TODO: root folder returns empty name?
+                        if (newItem.getAbsolutePath().equals("/")) {
+                            this.setText("/");
+                        } else {
+                            this.setText(newItem.getName());
+                        }
                     }
                 });
-
-//
 
     }
 
@@ -104,133 +94,34 @@ public class MyTreeCell extends TreeCell<File> {
         }
     }
 
-
-    //@Override
-    public void cancelEdit() {
-        super.cancelEdit();
-
-        //setText((String) getItem().getCanonicalPath());
-        setText((String) getItem().getName());
-//        } catch (IOException e) {
-//            e.printStackTrace();
-        this.setGraphic(null);
-        setImageForNode(this);
-    }
-
-    @Override
-    public void updateItem(File file, boolean empty) {
-        super.updateItem(file, empty);
-
-        if (empty) {
-            setText(null);
-            //setGraphic(null);
-        } else {
-            if (isEditing()) {
-                if (textField != null) {
-                    textField.setText(getString());
-                }
-                setText(null);
-                setGraphic(textField);
-            } else {
-                //setText(getString());
-                //TODO: влияет на отображение файла после переименования
-                setText(getItem().getName());
-                //setGraphic(getTreeItem().getGraphic());
-                //setImageForNode(this);
-            }
-        }
-    }
-
-    private void createTextField() {
-        //textField = new TextField(getString());
-        textField = new TextField(getItem().getName());
-
-        textField.setOnKeyReleased(new EventHandler<KeyEvent>() {
-
-            @Override
-            public void handle(KeyEvent t) {
-                if (t.getCode() == KeyCode.ENTER) {
-                    System.out.println(getItem().getParent());
-                    commitEdit(getItem().getParent() + File.separator + textField.getText());
-                } else if (t.getCode() == KeyCode.ESCAPE) {
-                    cancelEdit();
-                }
-            }
-        });
-    }
-
-
-    public void commitEdit(String newName) {
-        // rename the file or directory
-        if (editingPath != null) {
-            try {
-                System.out.println(editingPath);
-                System.out.println(getItem().getPath());
-                Files.move(Paths.get(editingPath), Paths.get(newName), StandardCopyOption.ATOMIC_MOVE);
-            } catch (IOException ex) {
-                cancelEdit();
-                //TODO: вызвать окно с ошибкой
-                System.out.println("что-то пошло не так");
-            }
-        }
-        setImageForNode(this);
-        this.setText(getItem().getPath());
-
-        super.commitEdit(getItem());
-    }
-
     @Override
     public void startEdit() {
-//        super.startEdit();
-//
-//        if (textField == null) {
-//            createTextField();
-//        }
-//        setText(null);
-//        setGraphic(textField);
-//        textField.selectAll();
-//        if (getItem() == null) {
-//            editingPath = null;
-//        } else {
-//            editingPath = (getItem().getParent() + File.separator + textField.getText());
-//            System.out.println(editingPath);
-//        }
+
     }
 
 
     private void setTooltipForFile(MyTreeCell cell) {
         File file = getItem();
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-        String type = (getItem().isDirectory()) ? "folder" : "file";
-        this.setTooltip(new Tooltip("Type: \t" + type +
-                "\nSize: \t" + fileSize(file) + "\n" + "Modified: \t" + sdf.format(file.lastModified())));
+        String typeDir = "folder";
+        String typeFile = "file";
+
+        if (getItem().isDirectory()) {
+            cell.setTooltip(new Tooltip("Type: \t" + typeDir +
+                    "\nFiles: \t" + numberFiles(file) + "\n" + "Modified: \t" + sdf.format(file.lastModified())));
+        } else {
+            cell.setTooltip(new Tooltip("Type: \t" + typeFile +
+                    "\n" + "Modified: \t" + sdf.format(file.lastModified())));
+        }
 
     }
 
-
-    private String fileSize(File file) {
-        long length;
-        if (!file.isDirectory()) {
-            length = file.length();
-        } else {
-            try {
-                length = Files.walk(file.toPath()).mapToLong(p -> p.toFile().length()).sum();
-            } catch (Exception e) {
-                return "unavailable";
-            }
-        }
-        if (length > 1024 * 1024) {
-            return length / 1024 / 1024 + " Mb";
-        } else if (length > 1024) {
-            return length / 1024 + " Kb";
-        } else {
-            return length + " b";
+    private String numberFiles(File file) {
+        try {
+            return String.valueOf(file.listFiles().length);
+        } catch (Exception e) {
+            return "unavailable";
         }
     }
-
-    private String getString() {
-        return getItem() == null ? "" : getItem().toString();
-    }
-
 
 }

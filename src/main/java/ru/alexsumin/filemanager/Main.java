@@ -13,8 +13,7 @@ public class Main extends Application {
         Parent root = FXMLLoader.load(getClass().getResource("/view/MainWindow.fxml"));
         primaryStage.setTitle("File Manager");
         primaryStage.setScene(new Scene(root, 640, 600));
-        Image ico = new Image(getClass().getResourceAsStream("/images/app.png"));
-        primaryStage.getIcons().add(ico);
+        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/images/app.png")));
         primaryStage.show();
     }
 }
