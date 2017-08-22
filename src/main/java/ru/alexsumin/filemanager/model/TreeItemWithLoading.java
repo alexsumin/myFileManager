@@ -19,7 +19,7 @@ public class TreeItemWithLoading extends TreeItem<File> {
 
     private boolean isLeaf = true;
     private boolean isFirstTimeLeaf = true;
-    private int newDirCount = 0;
+    private byte newDirCount = 0;
 
 
     public TreeItemWithLoading(File value) {
@@ -35,10 +35,6 @@ public class TreeItemWithLoading extends TreeItem<File> {
         });
 
 
-    }
-
-    public void setFirstTimeLeaf(boolean firstTimeLeaf) {
-        isFirstTimeLeaf = firstTimeLeaf;
     }
 
     public int getNewDirCount() {
@@ -93,7 +89,7 @@ public class TreeItemWithLoading extends TreeItem<File> {
                 }
                 FXCollections.sort(children, new DirectoryBeforeFileComparator());
 
-                //Thread.sleep(2000);
+                Thread.sleep(2000);
                 return children;
             }
         };

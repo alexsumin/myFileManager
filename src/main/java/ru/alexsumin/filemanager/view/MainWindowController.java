@@ -8,6 +8,9 @@ import javafx.event.EventDispatchChain;
 import javafx.event.EventDispatcher;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -20,6 +23,7 @@ import org.apache.commons.lang3.SystemUtils;
 import ru.alexsumin.filemanager.model.MyTreeCell;
 import ru.alexsumin.filemanager.model.TreeItemWithLoading;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -86,7 +90,6 @@ public class MainWindowController {
             String hostName = "MyPC";
             try {
                 hostName = InetAddress.getLocalHost().getHostName();
-                System.out.println(hostName);
             } catch (UnknownHostException x) {
             }
 
@@ -105,8 +108,6 @@ public class MainWindowController {
             }
 
         } else {
-            //root = new TreeItemWithLoading(new File(System.getProperty("user.home")));
-            //root = new TreeItemWithLoading(new File());
             root = new TreeItemWithLoading(new File("/"));
 
 
@@ -114,7 +115,7 @@ public class MainWindowController {
 
         treeView.setRoot(root);
         //root.setExpanded(true);
-        treeView.setEditable(true);
+        treeView.setEditable(false);
         EventDispatcher treeOriginal = treeView.getEventDispatcher();
         treeView.setEventDispatcher(new CellEventDispatcher(treeOriginal));
 
@@ -126,13 +127,28 @@ public class MainWindowController {
                 });
 
         treeView.setOnMouseClicked(t -> {
-            if (t.getClickCount() == 2 && selectedItem != null) {
+            if (t.getClickCount() == 2 && selectedItem != null && selectedItem != root) {
                 openFile();
             }
         });
 
 
+    }
 
+    private void expandTreeView(TreeItemWithLoading item) {
+        if (item != null && !item.isLeaf()) {
+            item.setExpanded(true);
+
+        }
+    }
+
+    private void collapseTreeView(TreeItemWithLoading item) {
+        if (item != null && !item.isLeaf()) {
+            item.setExpanded(false);
+//            for(TreeItem<File> child : item.getChildren()){
+//                collapseTreeView(child);
+//            }
+        }
     }
 
     @FXML
@@ -246,20 +262,28 @@ public class MainWindowController {
             } else {
                 {
 
-                    Runtime runtime = Runtime.getRuntime();
-                    try {
-                        runtime.exec("xdg-open " + selectedItem.getValue().getAbsolutePath());
-                    } catch (IOException e) {
-                        showExceptionDialog(e);
+                    if (Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+                        Desktop desktop = Desktop.getDesktop();
+                        try {
+                            desktop.open(selectedItem.getValue());
+                            Desktop.getDesktop().open(selectedItem.getValue());
+                        } catch (IOException e) {
+                            showExceptionDialog(e);
+                        }
                     }
                 }
 
             }
 
         } else {
-            selectedItem.setExpanded(!selectedItem.isExpanded());
+            if (!selectedItem.isExpanded()) {
+                collapseTreeView(selectedItem);
+            } else {
+                expandTreeView(selectedItem);
+            }
         }
     }
+
 
     @FXML
     private void copyFile() {
