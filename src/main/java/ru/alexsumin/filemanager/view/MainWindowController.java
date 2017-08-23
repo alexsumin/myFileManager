@@ -101,8 +101,9 @@ public class MainWindowController {
 
         }
 
+
         treeView.setRoot(root);
-        root.setExpanded(true);
+        root.setExpanded(false);
         treeView.setEditable(false);
         EventDispatcher treeOriginal = treeView.getEventDispatcher();
         treeView.setEventDispatcher(new CellEventDispatcher(treeOriginal));
