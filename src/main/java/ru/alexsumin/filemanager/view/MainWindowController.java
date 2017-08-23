@@ -43,7 +43,7 @@ public class MainWindowController {
         return t;
     });
     public static List<TreeItemWithLoading> systemDirectories = new ArrayList();
-    public static TreeItem root;
+    public static TreeItemWithLoading root;
     public boolean isWindows;
     @FXML
     private TreeView<File> treeView = new TreeView<>();
@@ -256,7 +256,8 @@ public class MainWindowController {
                 }
             }
         } else {
-            if (!selectedItem.isExpanded()) {
+
+            if (selectedItem.isExpanded()) {
                 collapseTreeView(selectedItem);
             } else {
                 expandTreeView(selectedItem);
