@@ -28,7 +28,7 @@ public class MyTreeCell extends TreeCell<File> {
                     if (isNowLoading) {
                         this.setGraphic(progressIndicator);
                     } else {
-                        setImageForNode(this);
+                        setImageForNode();
                     }
                 };
 
@@ -49,7 +49,7 @@ public class MyTreeCell extends TreeCell<File> {
                             this.setGraphic(progressIndicator);
                         } else {
                             this.setGraphic(null);
-                            setImageForNode(this);
+                            setImageForNode();
                         }
                     }
                 });
@@ -87,26 +87,28 @@ public class MyTreeCell extends TreeCell<File> {
         return name;
     }
 
-    private void setImageForNode(TreeCell<File> t) {
+    private void setImageForNode() {
         String pic;
-        if (t.getTreeItem().equals(MainWindowController.root)) {
-            t.setGraphic(new ImageView(pc));
+        if (this.getTreeItem().equals(MainWindowController.root)) {
+            this.setGraphic(new ImageView(pc));
             return;
-        } else if (t.getTreeItem().getValue().isDirectory()) {
-            if (t.getTreeItem().isExpanded()) t.setGraphic(new ImageView(folderOpened));
-            else t.setGraphic(new ImageView(folder));
+        } else if (this.getTreeItem().getValue().isDirectory()) {
+            if (this.getTreeItem().isExpanded()) this.setGraphic(new ImageView(folderOpened));
+            else this.setGraphic(new ImageView(folder));
         } else {
-            pic = t.getTreeItem().getValue().getAbsolutePath();
+
+            pic = this.getTreeItem().getValue().getAbsolutePath();
+
             Image image = new Image("file:" + pic);
             if (image.isError()) {
-                t.setGraphic(new ImageView(picFile));
+                this.setGraphic(new ImageView(picFile));
             } else {
                 ImageView imageView = new ImageView();
                 imageView.setImage(image);
                 imageView.setFitHeight(40);
                 imageView.setFitWidth(40);
                 imageView.setPreserveRatio(true);
-                t.setGraphic(imageView);
+                this.setGraphic(imageView);
             }
         }
     }

@@ -107,7 +107,7 @@ public class MainWindowController {
 
 
         treeView.setRoot(root);
-        root.setExpanded(false);
+        root.setExpanded(true);
         treeView.setEditable(false);
         EventDispatcher treeOriginal = treeView.getEventDispatcher();
         treeView.setEventDispatcher(new CellEventDispatcher(treeOriginal));
@@ -253,10 +253,6 @@ public class MainWindowController {
         return SystemUtils.IS_OS_WINDOWS;
     }
 
-    @FXML
-    private void exitProgram() {
-        System.exit(0);
-    }
     @FXML
     private void deleteFile() {
         if (selectedItem != null) {
