@@ -56,7 +56,7 @@ public class MainWindowController {
     @FXML
     private Button renameButton = new Button();
     @FXML
-    private Button removeButton = new Button();
+    private Button deleteButton = new Button();
     @FXML
     private Button newDirButton = new Button();
     @FXML
@@ -66,6 +66,9 @@ public class MainWindowController {
     private String tempFile;
     private boolean isCutted;
     private TreeItemWithLoading selectedItem;
+    @FXML
+    private ArrayList<Button> buttons = new ArrayList();
+
 
     @FXML
     private void initialize() {
@@ -76,10 +79,11 @@ public class MainWindowController {
 
     }
 
+
     private void configureTreeView(TreeView treeView) {
 
         if (isWindows()) {
-            String hostName = "MyPC";
+            String hostName = "This PC";
             try {
                 hostName = InetAddress.getLocalHost().getHostName();
             } catch (UnknownHostException x) {
@@ -113,14 +117,43 @@ public class MainWindowController {
                 .selectedItemProperty()
                 .addListener((observable, oldValue, newValue) -> {
                     selectedItem = (TreeItemWithLoading) newValue;
+
+                    if (!isEditableItem(selectedItem)) {
+
+                        buttons.stream().forEach(button -> button.setDisable(true));
+                        pasteButton.setDisable(true);
+
+                    } else {
+                        buttons.stream().forEach(button -> button.setDisable(false));
+                        pasteButton.setDisable(false);
+
+                    }
+
+
                 });
 
         treeView.setOnMouseClicked(t -> {
             if (t.getClickCount() == 2 && selectedItem != null) {
-                openFile();
+                if (isWindows() && selectedItem == root) {
+                    openFile();
+                }
             }
         });
 
+    }
+
+    private boolean isEditableItem(TreeItemWithLoading item) {
+
+        if (item.equals(root)) {
+            return false;
+        }
+        if (isWindows()) {
+            for (TreeItemWithLoading t : systemDirectories) {
+                if (item.equals(t))
+                    return false;
+            }
+        }
+        return true;
 
     }
 
@@ -221,6 +254,10 @@ public class MainWindowController {
     }
 
     @FXML
+    private void exitProgram() {
+        System.exit(0);
+    }
+    @FXML
     private void deleteFile() {
         if (selectedItem != null) {
             try {
@@ -256,11 +293,10 @@ public class MainWindowController {
                 }
             }
         } else {
-
-            if (selectedItem.isExpanded()) {
-                collapseTreeView(selectedItem);
-            } else {
+            if (!selectedItem.isExpanded()) {
                 expandTreeView(selectedItem);
+            } else {
+                collapseTreeView(selectedItem);
             }
         }
     }
