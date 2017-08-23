@@ -11,8 +11,6 @@ import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
@@ -31,6 +29,7 @@ import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -43,11 +42,9 @@ public class MainWindowController {
         t.setDaemon(true);
         return t;
     });
+    public static List<TreeItemWithLoading> systemDirectories = new ArrayList();
+    public static TreeItem root;
     public boolean isWindows;
-    Image picFile = new Image(getClass().getResourceAsStream("/images/file.png"), 30, 30, false, false);
-    Image folder = new Image(getClass().getResourceAsStream("/images/folder.png"), 30, 30, false, false);
-    Image folderOpened = new Image(getClass().getResourceAsStream("/images/openedfolder.png"), 30, 30, false, false);
-    Image pc = new Image(getClass().getResourceAsStream("/images/pc.png"), 30, 30, false, false);
     @FXML
     private TreeView<File> treeView = new TreeView<>();
     @FXML
@@ -64,14 +61,11 @@ public class MainWindowController {
     private Button newDirButton = new Button();
     @FXML
     private Button openButton = new Button();
-    private File currentFile;
     private File copiedFile;
     private File target;
     private String tempFile;
     private boolean isCutted;
     private TreeItemWithLoading selectedItem;
-    private List<TreeItemWithLoading> systemDirectories;
-
 
     @FXML
     private void initialize() {
@@ -84,25 +78,19 @@ public class MainWindowController {
 
     private void configureTreeView(TreeView treeView) {
 
-        TreeItemWithLoading root;
-
         if (isWindows()) {
             String hostName = "MyPC";
             try {
                 hostName = InetAddress.getLocalHost().getHostName();
             } catch (UnknownHostException x) {
             }
-
             root = new TreeItemWithLoading(new File(hostName));
-            root.setGraphic(new ImageView(pc));
-
 
             Iterable<Path> rootDirectories = FileSystems.getDefault().getRootDirectories();
 
             for (Path name : rootDirectories) {
                 File f = new File(name.toAbsolutePath().toString());
                 TreeItemWithLoading systemNode = new TreeItemWithLoading(f);
-
                 root.getChildren().add(systemNode);
                 systemDirectories.add(systemNode);
             }
@@ -114,7 +102,7 @@ public class MainWindowController {
         }
 
         treeView.setRoot(root);
-        //root.setExpanded(true);
+        root.setExpanded(true);
         treeView.setEditable(false);
         EventDispatcher treeOriginal = treeView.getEventDispatcher();
         treeView.setEventDispatcher(new CellEventDispatcher(treeOriginal));
@@ -127,7 +115,7 @@ public class MainWindowController {
                 });
 
         treeView.setOnMouseClicked(t -> {
-            if (t.getClickCount() == 2 && selectedItem != null && selectedItem != root) {
+            if (t.getClickCount() == 2 && selectedItem != null) {
                 openFile();
             }
         });
@@ -138,16 +126,12 @@ public class MainWindowController {
     private void expandTreeView(TreeItemWithLoading item) {
         if (item != null && !item.isLeaf()) {
             item.setExpanded(true);
-
         }
     }
 
     private void collapseTreeView(TreeItemWithLoading item) {
         if (item != null && !item.isLeaf()) {
             item.setExpanded(false);
-//            for(TreeItem<File> child : item.getChildren()){
-//                collapseTreeView(child);
-//            }
         }
     }
 
@@ -260,21 +244,16 @@ public class MainWindowController {
                     showExceptionDialog(e);
                 }
             } else {
-                {
-
-                    if (Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
-                        Desktop desktop = Desktop.getDesktop();
-                        try {
-                            desktop.open(selectedItem.getValue());
-                            Desktop.getDesktop().open(selectedItem.getValue());
-                        } catch (IOException e) {
-                            showExceptionDialog(e);
-                        }
+                if (Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+                    Desktop desktop = Desktop.getDesktop();
+                    try {
+                        desktop.open(selectedItem.getValue());
+                        Desktop.getDesktop().open(selectedItem.getValue());
+                    } catch (IOException e) {
+                        showExceptionDialog(e);
                     }
                 }
-
             }
-
         } else {
             if (!selectedItem.isExpanded()) {
                 collapseTreeView(selectedItem);
@@ -361,7 +340,7 @@ public class MainWindowController {
     }
 
     private String createDirectory() {
-        File file = (File) selectedItem.getValue();
+        File file = selectedItem.getValue();
         String parent = file.getPath();
         String newDir;
         while (true) {

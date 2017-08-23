@@ -7,6 +7,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import ru.alexsumin.filemanager.view.MainWindowController;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -15,6 +16,7 @@ public class MyTreeCell extends TreeCell<File> {
     Image picFile = new Image(getClass().getResourceAsStream("/images/file.png"), 30, 30, false, false);
     Image folder = new Image(getClass().getResourceAsStream("/images/folder.png"), 30, 30, false, false);
     Image folderOpened = new Image(getClass().getResourceAsStream("/images/openedfolder.png"), 30, 30, false, false);
+    Image pc = new Image(getClass().getResourceAsStream("/images/pc.png"), 30, 30, false, false);
 
     public MyTreeCell() {
 
@@ -64,7 +66,7 @@ public class MyTreeCell extends TreeCell<File> {
                         if (newItem.getAbsolutePath().equals("/")) {
                             this.setText("/");
                         } else {
-                            this.setText(newItem.getName());
+                            this.setText(getItemName(this));
                         }
                     }
                 });
@@ -72,10 +74,25 @@ public class MyTreeCell extends TreeCell<File> {
     }
 
 
-    private void setImageForNode(TreeCell<File> t) {
-        String pic = null;
-        if (t.getTreeItem().getValue().isDirectory()) {
+    private String getItemName(MyTreeCell cell) {
+        String name;
 
+        for (TreeItemWithLoading item : MainWindowController.systemDirectories) {
+            if (cell.getTreeItem().equals(item)) {
+
+                return item.getValue().getPath();
+            }
+        }
+        name = cell.getItem().getName();
+        return name;
+    }
+
+    private void setImageForNode(TreeCell<File> t) {
+        String pic;
+        if (t.getTreeItem().equals(MainWindowController.root)) {
+            t.setGraphic(new ImageView(pc));
+            return;
+        } else if (t.getTreeItem().getValue().isDirectory()) {
             if (t.getTreeItem().isExpanded()) t.setGraphic(new ImageView(folderOpened));
             else t.setGraphic(new ImageView(folder));
         } else {
@@ -103,17 +120,14 @@ public class MyTreeCell extends TreeCell<File> {
     private void setTooltipForFile(MyTreeCell cell) {
         File file = getItem();
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-        String typeDir = "folder";
-        String typeFile = "file";
 
         if (getItem().isDirectory()) {
-            cell.setTooltip(new Tooltip("Type: \t" + typeDir +
+            cell.setTooltip(new Tooltip("Type: \t" + "folder" +
                     "\nFiles: \t" + numberFiles(file) + "\n" + "Modified: \t" + sdf.format(file.lastModified())));
         } else {
-            cell.setTooltip(new Tooltip("Type: \t" + typeFile +
+            cell.setTooltip(new Tooltip("Type: \t" + "file" +
                     "\n" + "Modified: \t" + sdf.format(file.lastModified())));
         }
-
     }
 
     private String numberFiles(File file) {

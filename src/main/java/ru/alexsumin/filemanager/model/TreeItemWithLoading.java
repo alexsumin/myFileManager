@@ -27,10 +27,12 @@ public class TreeItemWithLoading extends TreeItem<File> {
 
 
         expandedProperty().addListener((ObservableValue<? extends Boolean> obs, Boolean wasExpanded, Boolean isNowExpanded) -> {
-            if (isNowExpanded) {
-                loadChildrenLazily();
-            } else {
-                clearChildren();
+            if (!this.equals(MainWindowController.root)) {
+                if (isNowExpanded) {
+                    loadChildrenLazily();
+                } else {
+                    clearChildren();
+                }
             }
         });
 
