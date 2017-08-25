@@ -8,20 +8,15 @@ import javafx.event.EventDispatchChain;
 import javafx.event.EventDispatcher;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
 import ru.alexsumin.filemanager.model.MyTreeCell;
 import ru.alexsumin.filemanager.model.TreeItemWithLoading;
 
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -46,7 +41,7 @@ public class MainWindowController {
     public static TreeItemWithLoading root;
     public boolean isWindows;
     @FXML
-    private TreeView<File> treeView = new TreeView<>();
+    private TreeView<Path> treeView = new TreeView<>();
     @FXML
     private Button copyButton = new Button();
     @FXML
@@ -61,9 +56,9 @@ public class MainWindowController {
     private Button newDirButton = new Button();
     @FXML
     private Button openButton = new Button();
-    private File copiedFile;
-    private File target;
-    private String tempFile;
+    private Path copiedFile;
+    private Path target;
+    private Path tempFile;
     private boolean isCutted;
     private TreeItemWithLoading selectedItem;
     @FXML
@@ -88,19 +83,20 @@ public class MainWindowController {
                 hostName = InetAddress.getLocalHost().getHostName();
             } catch (UnknownHostException x) {
             }
-            root = new TreeItemWithLoading(new File(hostName));
+            //root = new TreeItemWithLoading(new File(hostName));
+            root = new TreeItemWithLoading(Paths.get(hostName));
 
             Iterable<Path> rootDirectories = FileSystems.getDefault().getRootDirectories();
 
             for (Path name : rootDirectories) {
-                File f = new File(name.toAbsolutePath().toString());
-                TreeItemWithLoading systemNode = new TreeItemWithLoading(f);
+
+                TreeItemWithLoading systemNode = new TreeItemWithLoading(name);
                 root.getChildren().add(systemNode);
                 systemDirectories.add(systemNode);
             }
 
         } else {
-            root = new TreeItemWithLoading(new File("/"));
+            root = new TreeItemWithLoading(Paths.get("/"));
 
 
         }
@@ -118,16 +114,18 @@ public class MainWindowController {
                 .addListener((observable, oldValue, newValue) -> {
                     selectedItem = (TreeItemWithLoading) newValue;
 
-                    if (!isEditableItem(selectedItem)) {
+                    if (selectedItem != null)
 
-                        buttons.stream().forEach(button -> button.setDisable(true));
-                        pasteButton.setDisable(true);
+                        if (!isEditableItem(selectedItem)) {
 
-                    } else {
-                        buttons.stream().forEach(button -> button.setDisable(false));
-                        pasteButton.setDisable(false);
+                            buttons.stream().forEach(button -> button.setDisable(true));
+                            pasteButton.setDisable(true);
 
-                    }
+                        } else {
+                            buttons.stream().forEach(button -> button.setDisable(false));
+                            pasteButton.setDisable(false);
+
+                        }
 
 
                 });
@@ -172,10 +170,10 @@ public class MainWindowController {
     @FXML
     private void openRenameDialog() {
 
-        TextInputDialog dialog = new TextInputDialog(selectedItem.getValue().getName());
+        TextInputDialog dialog = new TextInputDialog(selectedItem.getValue().toString());
         dialog.setTitle("Renaming file");
 
-        dialog.setHeaderText("Rename file: " + selectedItem.getValue().getName());
+        dialog.setHeaderText("Rename file: " + selectedItem.getValue().toString());
         dialog.setContentText("Please enter new name: ");
 
         DialogPane dialogPane = dialog.getDialogPane();
@@ -193,15 +191,15 @@ public class MainWindowController {
     }
 
     private void renameFile(String newName) {
-        String newPath = selectedItem.getParent().getValue().getAbsolutePath() + File.separator + newName;
-        try {
-            Files.move(Paths.get(selectedItem.getValue().getAbsolutePath()),
-                    Paths.get(newPath), StandardCopyOption.ATOMIC_MOVE);
-        } catch (IOException e) {
-            showExceptionDialog(e);
-        }
-        selectedItem.getParent().getChildren().remove(selectedItem);
-        addNewItemAfterIO(newPath);
+//        String newPath = selectedItem.getParent().getValue().getAbsolutePath() + File.separator + newName;
+//        try {
+//            Files.move(Paths.get(selectedItem.getValue().getAbsolutePath()),
+//                    Paths.get(newPath), StandardCopyOption.ATOMIC_MOVE);
+//        } catch (IOException e) {
+//            showExceptionDialog(e);
+//        }
+//        selectedItem.getParent().getChildren().remove(selectedItem);
+//        addNewItemAfterIO(newPath);
 
     }
 
@@ -255,103 +253,103 @@ public class MainWindowController {
 
     @FXML
     private void deleteFile() {
-        if (selectedItem != null) {
-            try {
-                FileUtils.deleteDirectory(selectedItem.getValue());
-            } catch (IOException e) {
-                showExceptionDialog(e);
-            }
-            selectedItem.getParent().getChildren().remove(selectedItem);
-        }
+//        if (selectedItem != null) {
+//            try {
+//                FileUtils.deleteDirectory(selectedItem.getValue());
+//            } catch (IOException e) {
+//                showExceptionDialog(e);
+//            }
+//            selectedItem.getParent().getChildren().remove(selectedItem);
+//        }
 
     }
 
     @FXML
     private void openFile() {
-        if (!selectedItem.getValue().isDirectory()) {
-            if (!SystemUtils.IS_OS_WINDOWS) {
-
-                Runtime runtime = Runtime.getRuntime();
-                try {
-                    runtime.exec("xdg-open " + selectedItem.getValue().getAbsolutePath());
-                } catch (IOException e) {
-                    showExceptionDialog(e);
-                }
-            } else {
-                if (Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
-                    Desktop desktop = Desktop.getDesktop();
-                    try {
-                        desktop.open(selectedItem.getValue());
-                        Desktop.getDesktop().open(selectedItem.getValue());
-                    } catch (IOException e) {
-                        showExceptionDialog(e);
-                    }
-                }
-            }
-        } else {
-            if (!selectedItem.isExpanded()) {
-                expandTreeView(selectedItem);
-            } else {
-                collapseTreeView(selectedItem);
-            }
-        }
+//        if (!selectedItem.getValue().isDirectory()) {
+//            if (!SystemUtils.IS_OS_WINDOWS) {
+//
+//                Runtime runtime = Runtime.getRuntime();
+//                try {
+//                    runtime.exec("xdg-open " + selectedItem.getValue().getAbsolutePath());
+//                } catch (IOException e) {
+//                    showExceptionDialog(e);
+//                }
+//            } else {
+//                if (Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+//                    Desktop desktop = Desktop.getDesktop();
+//                    try {
+//                        desktop.open(selectedItem.getValue());
+//                        Desktop.getDesktop().open(selectedItem.getValue());
+//                    } catch (IOException e) {
+//                        showExceptionDialog(e);
+//                    }
+//                }
+//            }
+//        } else {
+//            if (!selectedItem.isExpanded()) {
+//                expandTreeView(selectedItem);
+//            } else {
+//                collapseTreeView(selectedItem);
+//            }
+//        }
     }
 
 
     @FXML
     private void copyFile() {
         if (selectedItem != null) {
-            copiedFile = selectedItem.getValue();
+//            copiedFile = selectedItem.getValue();
         }
     }
 
     @FXML
     private void cutFile() {
-        if (selectedItem != null) {
-            copiedFile = selectedItem.getValue();
-        }
-        isCutted = true;
-        selectedItem.getParent().getChildren().remove(selectedItem);
+//        if (selectedItem != null) {
+//            copiedFile = selectedItem.getValue();
+//        }
+//        isCutted = true;
+//        selectedItem.getParent().getChildren().remove(selectedItem);
     }
 
     @FXML
     private void pasteFile() {
 
-        if (selectedItem != null && copiedFile != null) {
-            target = (selectedItem.getValue().isDirectory()) ? selectedItem.getValue() : selectedItem.getParent().getValue();
-            tempFile = copiedFile.getName();
-            try {
-                if (isCutted) {
-                    if (copiedFile.isDirectory()) {
-                        FileUtils.moveDirectoryToDirectory(copiedFile, target, false);
-                        FileUtils.deleteDirectory(copiedFile);
-                    } else {
-                        FileUtils.moveFileToDirectory(copiedFile, target, false);
-                        copiedFile.delete();
-                    }
-                    isCutted = false;
-                    copiedFile = null;
-                } else {
-                    if (new File("" + target + File.separator + copiedFile.getName()).exists()) {
-                        throw new IOException();
-                    }
-                    if (copiedFile.isDirectory()) {
-                        FileUtils.copyDirectoryToDirectory(copiedFile, target);
-                    } else {
-                        FileUtils.copyFileToDirectory(copiedFile, target);
-
-                    }
-                }
-                addNewItemAfterIO("" + target + File.separator + tempFile);
-            } catch (IOException e) {
-                showExceptionDialog(e);
-            }
-            target = null;
-        }
+//        if (selectedItem != null && copiedFile != null) {
+//            target = (selectedItem.getValue().isDirectory()) ? selectedItem.getValue() : selectedItem.getParent().getValue();
+//            tempFile = copiedFile.getName();
+//            try {
+//                if (isCutted) {
+//                    if (copiedFile.isDirectory()) {
+//                        FileUtils.moveDirectoryToDirectory(copiedFile, target, false);
+//                        FileUtils.deleteDirectory(copiedFile);
+//                    } else {
+//                        FileUtils.moveFileToDirectory(copiedFile, target, false);
+//                        copiedFile.delete();
+//                    }
+//                    isCutted = false;
+//                    copiedFile = null;
+//                } else {
+//                    if (new File("" + target + File.separator + copiedFile.getName()).exists()) {
+//                        throw new IOException();
+//                    }
+//                    if (copiedFile.isDirectory()) {
+//                        FileUtils.copyDirectoryToDirectory(copiedFile, target);
+//                    } else {
+//                        FileUtils.copyFileToDirectory(copiedFile, target);
+//
+//                    }
+//                }
+//                addNewItemAfterIO("" + target + File.separator + tempFile);
+//            } catch (IOException e) {
+//                showExceptionDialog(e);
+//            }
+//            target = null;
+//        }
     }
 
     private void addNewItemAfterIO(String newName) {
-        TreeItemWithLoading addItem = new TreeItemWithLoading(new File(newName));
+        TreeItemWithLoading addItem = new TreeItemWithLoading(Paths.get(newName));
         if (selectedItem.isLeaf()) selectedItem.setLeaf(false);
         if (selectedItem.isExpanded()) {
             selectedItem.getChildren().add(addItem);
@@ -364,7 +362,7 @@ public class MainWindowController {
         if (selectedItem != null && selectedItem.getValue() != null) {
             String newD = createDirectory();
             if (newD != null) {
-                TreeItemWithLoading addItem = new TreeItemWithLoading(new File(newD));
+                TreeItemWithLoading addItem = new TreeItemWithLoading(Paths.get(newD));
                 if (selectedItem.isLeaf()) selectedItem.setLeaf(false);
                 if (selectedItem.isExpanded()) {
                     selectedItem.getChildren().add(addItem);
@@ -374,7 +372,7 @@ public class MainWindowController {
     }
 
     private String createDirectory() {
-        File file = selectedItem.getValue();
+        File file = new File(selectedItem.getValue().toString());
         String parent = file.getPath();
         String newDir;
         while (true) {

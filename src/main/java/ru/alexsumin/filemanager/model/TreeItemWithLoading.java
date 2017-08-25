@@ -10,21 +10,22 @@ import javafx.scene.control.TreeItem;
 import ru.alexsumin.filemanager.util.DirectoryBeforeFileComparator;
 import ru.alexsumin.filemanager.view.MainWindowController;
 
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
 import java.util.List;
 
-public class TreeItemWithLoading extends TreeItem<File> {
+public class TreeItemWithLoading extends TreeItem<Path> {
 
     private final BooleanProperty loading = new SimpleBooleanProperty(false);
-
     private boolean isLeaf = true;
     private boolean isFirstTimeLeaf = true;
     private byte newDirCount = 0;
 
-
-    public TreeItemWithLoading(File value) {
+    public TreeItemWithLoading(Path value) {
         super(value);
-
 
         expandedProperty().addListener((ObservableValue<? extends Boolean> obs, Boolean wasExpanded, Boolean isNowExpanded) -> {
             if (isNowExpanded) {
@@ -34,8 +35,6 @@ public class TreeItemWithLoading extends TreeItem<File> {
             }
 
         });
-
-
     }
 
     public int getNewDirCount() {
@@ -51,17 +50,17 @@ public class TreeItemWithLoading extends TreeItem<File> {
     }
 
     public final void setLoading(final boolean loading) {
-        this.loadingProperty().set(loading);
+        if (!isLeaf)
+            this.loadingProperty().set(loading);
     }
 
     @Override
     public boolean isLeaf() {
         if (isFirstTimeLeaf) {
             isFirstTimeLeaf = false;
-            File f = (File) getValue();
-            isLeaf = f.isFile();
+            Path path = getValue();
+            isLeaf = !Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS);
         }
-
         return isLeaf;
     }
 
@@ -77,20 +76,21 @@ public class TreeItemWithLoading extends TreeItem<File> {
             protected List<TreeItemWithLoading> call() throws Exception {
 
                 ObservableList<TreeItemWithLoading> children = FXCollections.observableArrayList();
-                File f = TreeItemWithLoading.this.getValue();
+                Path path = TreeItemWithLoading.this.getValue();
 
-                if (f != null && f.isDirectory()) {
-                    File[] files = f.listFiles();
-                    if (files != null) {
-                        for (File childFile : files) {
-                            TreeItemWithLoading t = new TreeItemWithLoading(childFile);
-                            children.add(t);
+                if (path != null && Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
+                    try (DirectoryStream<Path> dirs = Files.newDirectoryStream(path)) {
+                        for (Path dir : dirs) {
+                            TreeItemWithLoading item = new TreeItemWithLoading(dir);
+                            children.add(item);
                         }
+                    } catch (IOException ex) {
+                        //TODO: придумать что тут делать, видимо isProtected
                     }
                 }
                 FXCollections.sort(children, new DirectoryBeforeFileComparator());
 
-                Thread.sleep(2000);
+                //Thread.sleep(2000);
                 return children;
             }
         };
@@ -110,5 +110,12 @@ public class TreeItemWithLoading extends TreeItem<File> {
         getChildren().clear();
     }
 
-
+    @Override
+    public String toString() {
+        if (getValue().getFileName() == null) {
+            return getValue().toString();
+        } else {
+            return getValue().getFileName().toString();
+        }
+    }
 }
