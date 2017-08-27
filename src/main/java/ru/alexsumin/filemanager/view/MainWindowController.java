@@ -2,7 +2,6 @@ package ru.alexsumin.filemanager.view;
 
 
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventDispatchChain;
 import javafx.event.EventDispatcher;
@@ -16,6 +15,10 @@ import javafx.stage.Stage;
 import org.apache.commons.lang3.SystemUtils;
 import ru.alexsumin.filemanager.model.MyTreeCell;
 import ru.alexsumin.filemanager.model.TreeItemWithLoading;
+import ru.alexsumin.filemanager.util.FileCopyTask;
+import ru.alexsumin.filemanager.util.FileDeleteTask;
+import ru.alexsumin.filemanager.util.FileRenameTask;
+import ru.alexsumin.filemanager.util.FileRunTask;
 
 import java.io.File;
 import java.io.IOException;
@@ -64,16 +67,15 @@ public class MainWindowController {
     @FXML
     private ArrayList<Button> buttons = new ArrayList();
 
-
     @FXML
     private void initialize() {
         isWindows = isWindows();
         treeView.setCellFactory(param -> new MyTreeCell());
         configureTreeView(treeView);
-
-
+        disableButtons();
+        pasteButton.setDisable(true);
+        openButton.setDisable(true);
     }
-
 
     private void configureTreeView(TreeView treeView) {
 
@@ -83,7 +85,6 @@ public class MainWindowController {
                 hostName = InetAddress.getLocalHost().getHostName();
             } catch (UnknownHostException x) {
             }
-            //root = new TreeItemWithLoading(new File(hostName));
             root = new TreeItemWithLoading(Paths.get(hostName));
 
             Iterable<Path> rootDirectories = FileSystems.getDefault().getRootDirectories();
@@ -94,41 +95,32 @@ public class MainWindowController {
                 root.getChildren().add(systemNode);
                 systemDirectories.add(systemNode);
             }
-
         } else {
             root = new TreeItemWithLoading(Paths.get("/"));
-
-
         }
 
 
         treeView.setRoot(root);
-        root.setExpanded(true);
+        //root.setExpanded(true);
         treeView.setEditable(false);
         EventDispatcher treeOriginal = treeView.getEventDispatcher();
         treeView.setEventDispatcher(new CellEventDispatcher(treeOriginal));
 
-
         treeView.getSelectionModel()
                 .selectedItemProperty()
                 .addListener((observable, oldValue, newValue) -> {
+                    openButton.setDisable(false);
                     selectedItem = (TreeItemWithLoading) newValue;
+                    if (selectedItem == null | !isEditableItem(selectedItem)) {
+                        disableButtons();
 
-                    if (selectedItem != null)
-
-                        if (!isEditableItem(selectedItem)) {
-
-                            buttons.stream().forEach(button -> button.setDisable(true));
-                            pasteButton.setDisable(true);
-
-                        } else {
-                            buttons.stream().forEach(button -> button.setDisable(false));
-                            pasteButton.setDisable(false);
-
-                        }
-
-
+                        pasteButton.setDisable(true);
+                    } else {
+                        enableButtons();
+                        pasteButton.setDisable(false);
+                    }
                 });
+
 
         treeView.setOnMouseClicked(t -> {
             if (t.getClickCount() == 2 && selectedItem != null) {
@@ -138,6 +130,14 @@ public class MainWindowController {
             }
         });
 
+    }
+
+    private void disableButtons() {
+        buttons.stream().forEach(button -> button.setDisable(true));
+    }
+
+    private void enableButtons() {
+        buttons.stream().forEach(button -> button.setDisable(false));
     }
 
     private boolean isEditableItem(TreeItemWithLoading item) {
@@ -170,7 +170,7 @@ public class MainWindowController {
     @FXML
     private void openRenameDialog() {
 
-        TextInputDialog dialog = new TextInputDialog(selectedItem.getValue().toString());
+        TextInputDialog dialog = new TextInputDialog(selectedItem.getValue().getFileName().toString());
         dialog.setTitle("Renaming file");
 
         dialog.setHeaderText("Rename file: " + selectedItem.getValue().toString());
@@ -180,9 +180,9 @@ public class MainWindowController {
         dialogPane.getStylesheets().add(
                 getClass().getResource("/view/BasicApplication.css").toExternalForm());
 
-        dialog.showAndWait().ifPresent(response -> {
-            if (response != null) {
-                renameFile(response);
+        dialog.showAndWait().ifPresent(newName -> {
+            if (newName != null) {
+                renameFile(newName);
 
             }
         });
@@ -191,29 +191,28 @@ public class MainWindowController {
     }
 
     private void renameFile(String newName) {
-//        String newPath = selectedItem.getParent().getValue().getAbsolutePath() + File.separator + newName;
-//        try {
-//            Files.move(Paths.get(selectedItem.getValue().getAbsolutePath()),
-//                    Paths.get(newPath), StandardCopyOption.ATOMIC_MOVE);
-//        } catch (IOException e) {
-//            showExceptionDialog(e);
-//        }
-//        selectedItem.getParent().getChildren().remove(selectedItem);
-//        addNewItemAfterIO(newPath);
+
+        Path newPath = Paths.get(selectedItem.getValue().getParent() + File.separator + newName);
+        FileRenameTask fileRenameTask = new FileRenameTask(selectedItem.getValue(), newPath);
+
+        fileRenameTask.setOnSucceeded(event -> selectedItem.setValue(newPath));
+        fileRenameTask.setOnFailed(event -> showExceptionDialog(fileRenameTask.getException()));
+        EXEC.submit(fileRenameTask);
+
 
     }
 
-    private void showExceptionDialog(Exception ex) {
+    private void showExceptionDialog(Throwable throwable) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
 
         alert.setTitle("Exception Dialog");
         alert.setHeight(400);
         alert.setHeaderText("Ooops, Exception here");
-        alert.setContentText(ex.getMessage());
+        alert.setContentText(throwable.getMessage());
 
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
-        ex.printStackTrace(pw);
+        throwable.printStackTrace(pw);
         String exceptionText = sw.toString();
 
         Label label = new Label("The exception stacktrace was:");
@@ -253,116 +252,90 @@ public class MainWindowController {
 
     @FXML
     private void deleteFile() {
-//        if (selectedItem != null) {
-//            try {
-//                FileUtils.deleteDirectory(selectedItem.getValue());
-//            } catch (IOException e) {
-//                showExceptionDialog(e);
-//            }
-//            selectedItem.getParent().getChildren().remove(selectedItem);
-//        }
+        if (selectedItem == null) {
+            return;
+        }
+        FileDeleteTask deleteTask = new FileDeleteTask(selectedItem.getValue());
+
+        deleteTask.setOnSucceeded(event -> selectedItem.getParent().getChildren().remove(selectedItem));
+        deleteTask.setOnFailed(evt -> showExceptionDialog(deleteTask.getException()));
+        EXEC.submit(deleteTask);
 
     }
+
 
     @FXML
     private void openFile() {
-//        if (!selectedItem.getValue().isDirectory()) {
-//            if (!SystemUtils.IS_OS_WINDOWS) {
-//
-//                Runtime runtime = Runtime.getRuntime();
-//                try {
-//                    runtime.exec("xdg-open " + selectedItem.getValue().getAbsolutePath());
-//                } catch (IOException e) {
-//                    showExceptionDialog(e);
-//                }
-//            } else {
-//                if (Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
-//                    Desktop desktop = Desktop.getDesktop();
-//                    try {
-//                        desktop.open(selectedItem.getValue());
-//                        Desktop.getDesktop().open(selectedItem.getValue());
-//                    } catch (IOException e) {
-//                        showExceptionDialog(e);
-//                    }
-//                }
-//            }
-//        } else {
-//            if (!selectedItem.isExpanded()) {
-//                expandTreeView(selectedItem);
-//            } else {
-//                collapseTreeView(selectedItem);
-//            }
-//        }
-    }
+        if (selectedItem == null) {
+            return;
+        }
+        if (!selectedItem.isLeaf()) {
+            if (!selectedItem.isExpanded()) {
+                expandTreeView(selectedItem);
+            } else {
+                collapseTreeView(selectedItem);
+            }
+        } else {
+            FileRunTask fileRunTask = new FileRunTask(selectedItem.getValue());
+            fileRunTask.setOnFailed(event -> showExceptionDialog(fileRunTask.getException()));
+            EXEC.submit(fileRunTask);
+        }
 
+
+    }
 
     @FXML
     private void copyFile() {
         if (selectedItem != null) {
-//            copiedFile = selectedItem.getValue();
+            copiedFile = selectedItem.getValue();
         }
+        isCutted = false;
     }
 
     @FXML
     private void cutFile() {
-//        if (selectedItem != null) {
-//            copiedFile = selectedItem.getValue();
-//        }
-//        isCutted = true;
-//        selectedItem.getParent().getChildren().remove(selectedItem);
+        if (selectedItem != null) {
+            copiedFile = selectedItem.getValue();
+        }
+        isCutted = true;
+        selectedItem.getParent().getChildren().remove(selectedItem);
     }
 
     @FXML
     private void pasteFile() {
+        if (selectedItem != null && copiedFile != null) {
+            target = (Files.isDirectory(selectedItem.getValue()) ? selectedItem.getValue() : selectedItem.getParent().getValue());
+            tempFile = copiedFile.getFileName();
+            FileCopyTask copyTask = new FileCopyTask(copiedFile, target, isCutted);
 
-//        if (selectedItem != null && copiedFile != null) {
-//            target = (selectedItem.getValue().isDirectory()) ? selectedItem.getValue() : selectedItem.getParent().getValue();
-//            tempFile = copiedFile.getName();
-//            try {
-//                if (isCutted) {
-//                    if (copiedFile.isDirectory()) {
-//                        FileUtils.moveDirectoryToDirectory(copiedFile, target, false);
-//                        FileUtils.deleteDirectory(copiedFile);
-//                    } else {
-//                        FileUtils.moveFileToDirectory(copiedFile, target, false);
-//                        copiedFile.delete();
-//                    }
-//                    isCutted = false;
-//                    copiedFile = null;
-//                } else {
-//                    if (new File("" + target + File.separator + copiedFile.getName()).exists()) {
-//                        throw new IOException();
-//                    }
-//                    if (copiedFile.isDirectory()) {
-//                        FileUtils.copyDirectoryToDirectory(copiedFile, target);
-//                    } else {
-//                        FileUtils.copyFileToDirectory(copiedFile, target);
-//
-//                    }
-//                }
-//                addNewItemAfterIO("" + target + File.separator + tempFile);
-//            } catch (IOException e) {
-//                showExceptionDialog(e);
-//            }
-//            target = null;
-//        }
+            copyTask.setOnSucceeded(event -> {
+                if (isCutted) isCutted = false;
+                addNewItemAfterIO(target + File.separator + tempFile);
+
+            });
+            copyTask.setOnFailed(evt -> showExceptionDialog(copyTask.getException()));
+            EXEC.submit(copyTask);
+
+        }
     }
 
     private void addNewItemAfterIO(String newName) {
-        TreeItemWithLoading addItem = new TreeItemWithLoading(Paths.get(newName));
-        if (selectedItem.isLeaf()) selectedItem.setLeaf(false);
-        if (selectedItem.isExpanded()) {
-            selectedItem.getChildren().add(addItem);
+        TreeItemWithLoading newItem = new TreeItemWithLoading(Paths.get(newName));
+        if (!Files.isDirectory(selectedItem.getValue(), LinkOption.NOFOLLOW_LINKS)) {
+            TreeItemWithLoading parent = (TreeItemWithLoading) selectedItem.getParent();
+            parent.getChildren().add(newItem);
+        } else if (selectedItem.isExpanded()) {
+            selectedItem.getChildren().add(newItem);
         }
     }
 
 
     @FXML
-    private void createNewItemDirectory(final ActionEvent event) {
+    private void createNewItemDirectory() {
         if (selectedItem != null && selectedItem.getValue() != null) {
-            String newD = createDirectory();
-            if (newD != null) {
-                TreeItemWithLoading addItem = new TreeItemWithLoading(Paths.get(newD));
+            String newDirectory = createDirectory();
+            if (newDirectory != null) {
+                TreeItemWithLoading addItem = new TreeItemWithLoading(Paths.get(newDirectory));
                 if (selectedItem.isLeaf()) selectedItem.setLeaf(false);
                 if (selectedItem.isExpanded()) {
                     selectedItem.getChildren().add(addItem);
@@ -372,8 +345,7 @@ public class MainWindowController {
     }
 
     private String createDirectory() {
-        File file = new File(selectedItem.getValue().toString());
-        String parent = file.getPath();
+        Path parent = selectedItem.getValue().getParent();
         String newDir;
         while (true) {
             newDir = parent + File.separator + "NewDirectory" + String.valueOf(selectedItem.getNewDirCount());
@@ -384,6 +356,7 @@ public class MainWindowController {
                 continue;
             } catch (IOException e) {
                 showExceptionDialog(e);
+                break;
             }
         }
         return newDir;

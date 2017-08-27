@@ -13,12 +13,10 @@ public class DirectoryBeforeFileComparator implements Comparator<TreeItemWithLoa
     public int compare(TreeItemWithLoading t1, TreeItemWithLoading t2) {
         if (Files.isDirectory(t1.getValue(), LinkOption.NOFOLLOW_LINKS) &&
                 !Files.isDirectory(t2.getValue(), LinkOption.NOFOLLOW_LINKS)) {
-
             return -1;
         }
         if (!Files.isDirectory(t1.getValue(), LinkOption.NOFOLLOW_LINKS) &&
                 Files.isDirectory(t2.getValue(), LinkOption.NOFOLLOW_LINKS)) {
-
             return 1;
         }
 

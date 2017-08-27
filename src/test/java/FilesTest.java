@@ -23,4 +23,15 @@ public class FilesTest {
 
 
     }
+
+    @Test
+    public void forRenameTest() {
+        String s1 = "/home/alex/Pictures/Wallpapers/MiNotebookWall.jpg";
+        Path pathPic = Paths.get(s1);
+
+
+        System.out.println(pathPic.toAbsolutePath());
+        Path parent = pathPic.getParent();
+        assertEquals("/home/alex/Pictures/Wallpapers", parent.toString());
+    }
 }

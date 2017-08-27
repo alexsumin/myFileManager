@@ -2,7 +2,6 @@ package ru.alexsumin.filemanager.model;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.concurrent.Task;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TreeCell;
 import javafx.scene.image.Image;
@@ -22,6 +21,7 @@ public class MyTreeCell extends TreeCell<Path> {
     Image picPc = new Image(getClass().getResourceAsStream("/images/pc.png"), 30, 30, false, false);
     Image picLoading = new Image(getClass().getResourceAsStream("/images/loadingFile.png"), 30, 30, false, false);
     Image picImage = new Image(getClass().getResourceAsStream("/images/pictureFile.png"), 30, 30, false, false);
+    Image errorImage = new Image(getClass().getResourceAsStream("/images/lock.png"), 30, 30, false, false);
 
 
     public MyTreeCell() {
@@ -40,21 +40,16 @@ public class MyTreeCell extends TreeCell<Path> {
 
         this.treeItemProperty().addListener(
                 (obs, oldItem, newItem) -> {
-
                     if (oldItem != null) {
                         TreeItemWithLoading oldLazyTreeItem = (TreeItemWithLoading) oldItem;
                         oldLazyTreeItem.loadingProperty().removeListener(loadingChangeListener);
                     }
-
                     if (newItem != null) {
                         TreeItemWithLoading newLazyTreeItem = (TreeItemWithLoading) newItem;
                         newLazyTreeItem.loadingProperty().addListener(loadingChangeListener);
-
                         if (newLazyTreeItem.isLoading()) {
-
                             this.setGraphic(progressIndicator);
                         } else {
-                            //this.setGraphic(null);
                             setImageForNode();
                         }
                     }
@@ -75,72 +70,114 @@ public class MyTreeCell extends TreeCell<Path> {
     }
 
 
-
-
-
-
     private void setImageForNode() {
-        String pic;
+
 
         if (this.getTreeItem().equals(MainWindowController.root)) {
             this.setGraphic(new ImageView(picPc));
             return;
         }
 
-        this.getTreeItem().setGraphic(new ImageView(picLoading));
-
-
-        Task<ImageView> graphicTask = new Task<ImageView>() {
-
-            @Override
-            protected ImageView call() {
-
-
-                ImageView imageView = new ImageView(picFile);
-                Path path = getTreeItem().getValue();
-                if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
-                    if (getTreeItem().isExpanded()) {
-                        imageView = new ImageView(folderOpened);
+        try {
+            Path path = getTreeItem().getValue();
+            if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
+                if (getTreeItem().isExpanded()) {
+                    this.setGraphic(new ImageView(folderOpened));
+                } else {
+                    this.setGraphic(new ImageView(folder));
+                }
+            } else {
+                String pic = Files.probeContentType(path);
+                if (pic != null && pic.startsWith("image")) {
+                    if (Files.size(path) < 5 * 1024 * 1024) {
+                        Image image = new Image("file:" + path);
+                        if (image.isError()) {
+                            this.setGraphic(new ImageView(picImage));
+                        } else {
+                            ImageView imageView = new ImageView(image);
+                            imageView.setFitHeight(40);
+                            imageView.setFitWidth(40);
+                            imageView.setPreserveRatio(true);
+                            this.setGraphic(imageView);
+                        }
                     } else {
-                        imageView = new ImageView(folder);
+                        this.setGraphic(new ImageView(picImage));
                     }
                 } else {
-                    String s = null;
-                    try {
-                        s = Files.probeContentType(path);
-                        if (s.startsWith("image")) {
-                            if (Files.size(path) < 5 * 1024 * 1024) {
-                                Image image = new Image("file:" + path);
-
-                                if (image.isError()) {
-                                    imageView = new ImageView(picImage);
-                                } else {
-                                    imageView = new ImageView(image);
-                                    imageView.setFitHeight(40);
-                                    imageView.setFitWidth(40);
-                                    imageView.setPreserveRatio(true);
-                                }
-                            } else {
-                                imageView = new ImageView(picImage);
-                            }
-                        }
-                    } catch (IOException e) {
-                        return new ImageView(picFile);
-                    }
+                    this.setGraphic(new ImageView(picFile));
                 }
-                return imageView;
+
             }
-
-
-        };
-
-        graphicTask.setOnSucceeded(event -> {
-            ImageView imageView = graphicTask.getValue();
-            setGraphic(imageView);
-        });
-
-        MainWindowController.EXEC.submit(graphicTask);
+        } catch (IOException e) {
+            this.setGraphic(new ImageView(errorImage));
+        }
     }
+
+//    void setImageForNode() {
+//
+//
+//        if (this.getTreeItem().equals(MainWindowController.root)) {
+//            this.setGraphic(new ImageView(picPc));
+//            return;
+//        }
+//
+//
+//        this.getTreeItem().setGraphic(new ImageView(picLoading));
+//
+//
+//        Task<ImageView> graphicTask = new Task<ImageView>() {
+//
+//            @Override
+//            protected ImageView call() {
+//                System.out.println("таска для " + getTreeItem());
+//
+//                ImageView imageView = new ImageView(picFile);
+//                Path path = getTreeItem().getValue();
+//
+//
+//                    String s = null;
+//                    try {
+//                        s = Files.probeContentType(path);
+//                        if (s.startsWith("image")) {
+//                            if (Files.size(path) < 5 * 1024 * 1024) {
+//                                Image image = new Image("file:" + path);
+//
+//                                if (image.isError()) {
+//                                    return imageView = new ImageView(picImage);
+//                                } else {
+//                                    imageView = new ImageView(image);
+//                                    imageView.setFitHeight(40);
+//                                    imageView.setFitWidth(40);
+//                                    imageView.setPreserveRatio(true);
+//                                    return imageView;
+//                                }
+//                            } else {
+//                                return imageView = new ImageView(picImage);
+//                            }
+//                        }
+//                    } catch (IOException e) {
+//                        return new ImageView(picFile);
+//                    }
+//                return null;
+//                }
+//
+//
+//
+//
+//        };
+//
+////        graphicTask.setOnRunning(event -> {
+////            ImageView imageView = graphicTask.getValue();
+////            setGraphic(imageView);
+////        });
+//
+//        graphicTask.setOnSucceeded(event -> {
+//            ImageView imageView = graphicTask.getValue();
+//            setGraphic(imageView);
+//        });
+//
+//        MainWindowController.EXEC.submit(graphicTask);
+//    }
 
     @Override
     public void startEdit() {
