@@ -7,12 +7,9 @@ import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Path;
 
-/**
- * Created by alex on 27.08.17.
- */
 public class FileRunTask extends Task<Void> {
 
-    Path forRun;
+    private Path forRun;
 
     public FileRunTask(Path forRun) {
         this.forRun = forRun;
@@ -30,9 +27,7 @@ public class FileRunTask extends Task<Void> {
             }
         } else {
             if (Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
-                Desktop desktop = Desktop.getDesktop();
                 try {
-                    desktop.open(forRun.toFile());
                     Desktop.getDesktop().open(forRun.toFile());
                 } catch (IOException e) {
                     throw e;

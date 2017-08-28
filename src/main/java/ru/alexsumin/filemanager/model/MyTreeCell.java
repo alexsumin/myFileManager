@@ -14,13 +14,12 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 
 public class MyTreeCell extends TreeCell<Path> {
-    Image picFile = new Image(getClass().getResourceAsStream("/images/file.png"), 30, 30, false, false);
-    Image folder = new Image(getClass().getResourceAsStream("/images/folder.png"), 30, 30, false, false);
-    Image folderOpened = new Image(getClass().getResourceAsStream("/images/openedfolder.png"), 30, 30, false, false);
-    Image picPc = new Image(getClass().getResourceAsStream("/images/pc.png"), 30, 30, false, false);
-    Image picLoading = new Image(getClass().getResourceAsStream("/images/loadingFile.png"), 30, 30, false, false);
-    Image picImage = new Image(getClass().getResourceAsStream("/images/pictureFile.png"), 30, 30, false, false);
-    Image errorImage = new Image(getClass().getResourceAsStream("/images/lock.png"), 30, 30, false, false);
+    private Image picFile = new Image(getClass().getResourceAsStream("/images/file.png"), 30, 30, false, false);
+    private Image folder = new Image(getClass().getResourceAsStream("/images/folder.png"), 30, 30, false, false);
+    private Image folderOpened = new Image(getClass().getResourceAsStream("/images/openedfolder.png"), 30, 30, false, false);
+    private Image picPc = new Image(getClass().getResourceAsStream("/images/pc.png"), 30, 30, false, false);
+    private Image picImage = new Image(getClass().getResourceAsStream("/images/pictureFile.png"), 30, 30, false, false);
+    private Image errorImage = new Image(getClass().getResourceAsStream("/images/lock.png"), 30, 30, false, false);
 
 
     public MyTreeCell() {

@@ -85,12 +85,12 @@ public class TreeItemWithLoading extends TreeItem<Path> {
                             children.add(item);
                         }
                     } catch (IOException ex) {
-                        //TODO: придумать что тут делать, видимо isProtected
+                        //TODO: придумать что тут делать
                     }
                 }
                 FXCollections.sort(children, new DirectoryBeforeFileComparator());
 
-                //Thread.sleep(2000);
+                Thread.sleep(2000);
                 return children;
             }
         };

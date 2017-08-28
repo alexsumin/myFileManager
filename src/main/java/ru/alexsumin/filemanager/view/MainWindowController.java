@@ -24,8 +24,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,8 +39,8 @@ public class MainWindowController {
         return t;
     });
     public static List<TreeItemWithLoading> systemDirectories = new ArrayList();
-    public static TreeItemWithLoading root;
-    public boolean isWindows;
+    public static TreeItem root;
+    private boolean isWindows;
     @FXML
     private TreeView<Path> treeView = new TreeView<>();
     @FXML
@@ -70,38 +68,31 @@ public class MainWindowController {
     @FXML
     private void initialize() {
         isWindows = isWindows();
-        treeView.setCellFactory(param -> new MyTreeCell());
+
         configureTreeView(treeView);
+        treeView.setCellFactory(param -> new MyTreeCell());
         disableButtons();
         pasteButton.setDisable(true);
         openButton.setDisable(true);
+        newDirButton.setDisable(true);
+        treeView.setShowRoot(false);
     }
 
     private void configureTreeView(TreeView treeView) {
-
         if (isWindows()) {
-            String hostName = "This PC";
-            try {
-                hostName = InetAddress.getLocalHost().getHostName();
-            } catch (UnknownHostException x) {
-            }
-            root = new TreeItemWithLoading(Paths.get(hostName));
-
+            root = new TreeItem(null);
+            treeView.setRoot(root);
             Iterable<Path> rootDirectories = FileSystems.getDefault().getRootDirectories();
-
             for (Path name : rootDirectories) {
-
                 TreeItemWithLoading systemNode = new TreeItemWithLoading(name);
                 root.getChildren().add(systemNode);
                 systemDirectories.add(systemNode);
             }
         } else {
             root = new TreeItemWithLoading(Paths.get("/"));
+            treeView.setRoot(root);
         }
 
-
-        treeView.setRoot(root);
-        //root.setExpanded(true);
         treeView.setEditable(false);
         EventDispatcher treeOriginal = treeView.getEventDispatcher();
         treeView.setEventDispatcher(new CellEventDispatcher(treeOriginal));
@@ -111,24 +102,17 @@ public class MainWindowController {
                 .addListener((observable, oldValue, newValue) -> {
                     openButton.setDisable(false);
                     selectedItem = (TreeItemWithLoading) newValue;
-                    if (selectedItem == null | !isEditableItem(selectedItem)) {
+                    if (selectedItem == null || !isEditableItem(selectedItem)) {
                         disableButtons();
-
-                        pasteButton.setDisable(true);
+                        newDirButton.setDisable(false);
+                        pasteButton.setDisable(false);
                     } else {
                         enableButtons();
                         pasteButton.setDisable(false);
+                        newDirButton.setDisable(false);
                     }
                 });
 
-
-        treeView.setOnMouseClicked(t -> {
-            if (t.getClickCount() == 2 && selectedItem != null) {
-                if (isWindows() && selectedItem == root) {
-                    openFile();
-                }
-            }
-        });
 
     }
 
@@ -296,9 +280,10 @@ public class MainWindowController {
     private void cutFile() {
         if (selectedItem != null) {
             copiedFile = selectedItem.getValue();
+            isCutted = true;
+            selectedItem.getParent().getChildren().remove(selectedItem);
         }
-        isCutted = true;
-        selectedItem.getParent().getChildren().remove(selectedItem);
+
     }
 
     @FXML
@@ -336,7 +321,10 @@ public class MainWindowController {
             String newDirectory = createDirectory();
             if (newDirectory != null) {
                 TreeItemWithLoading addItem = new TreeItemWithLoading(Paths.get(newDirectory));
-                if (selectedItem.isLeaf()) selectedItem.setLeaf(false);
+                if (selectedItem.isLeaf()) {
+                    selectedItem.getParent().getChildren().add(addItem);
+                    return;
+                }
                 if (selectedItem.isExpanded()) {
                     selectedItem.getChildren().add(addItem);
                 }
@@ -345,10 +333,15 @@ public class MainWindowController {
     }
 
     private String createDirectory() {
-        Path parent = selectedItem.getValue().getParent();
+        Path path;
+        if (Files.isDirectory(selectedItem.getValue(), LinkOption.NOFOLLOW_LINKS)) {
+            path = selectedItem.getValue();
+        } else {
+            path = selectedItem.getValue().getParent();
+        }
         String newDir;
         while (true) {
-            newDir = parent + File.separator + "NewDirectory" + String.valueOf(selectedItem.getNewDirCount());
+            newDir = path + File.separator + "NewDirectory" + String.valueOf(selectedItem.getNewDirCount());
             try {
                 Files.createDirectory(Paths.get(newDir));
                 break;

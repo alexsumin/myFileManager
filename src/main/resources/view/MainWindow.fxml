@@ -56,7 +56,6 @@
                 <fx:reference source="cutButton"/>
                 <fx:reference source="renameButton"/>
                 <fx:reference source="deleteButton"/>
-                <fx:reference source="newDirButton"/>
             </ArrayList>
         </fx:define>
     </children>
