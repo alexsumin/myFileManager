@@ -6,7 +6,7 @@
 <?import java.net.URL?>
 <?import java.util.ArrayList?>
 <VBox xmlns:fx="http://javafx.com/fxml/1" prefHeight="600.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/8.0.111"
-      fx:controller="ru.alexsumin.filemanager.view.MainWindowController">
+      fx:controller="ru.alexsumin.filemanager.view.FileManagerController">
     <children>
         <AnchorPane maxHeight="-1.0" maxWidth="-1.0" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS">
             <children>

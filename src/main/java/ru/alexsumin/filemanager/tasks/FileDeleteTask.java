@@ -1,4 +1,4 @@
-package ru.alexsumin.filemanager.util;
+package ru.alexsumin.filemanager.tasks;
 
 
 import javafx.concurrent.Task;
@@ -10,7 +10,7 @@ import java.nio.file.Path;
 
 public class FileDeleteTask extends Task<Void> {
 
-    Path forDelete;
+    private Path forDelete;
 
     public FileDeleteTask(Path forDelete) {
         this.forDelete = forDelete;
@@ -21,9 +21,8 @@ public class FileDeleteTask extends Task<Void> {
         try {
             if (Files.isDirectory(forDelete, LinkOption.NOFOLLOW_LINKS)) {
                 FileUtils.deleteDirectory(forDelete.toFile());
-
             } else {
-                FileUtils.forceDelete(forDelete.toFile());
+                Files.delete(forDelete);
             }
         } catch (Exception e) {
             throw e;

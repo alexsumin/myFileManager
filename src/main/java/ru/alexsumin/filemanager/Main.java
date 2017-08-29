@@ -10,7 +10,7 @@ import javafx.stage.Stage;
 
 public class Main extends Application {
     public void start(Stage primaryStage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("/view/MainWindow.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/view/FileManager.fxml"));
         primaryStage.setTitle("File Manager");
         primaryStage.setScene(new Scene(root, 640, 600));
         primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/images/app.png")));

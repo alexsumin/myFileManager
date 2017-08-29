@@ -7,8 +7,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.control.TreeItem;
-import ru.alexsumin.filemanager.util.DirectoryBeforeFileComparator;
-import ru.alexsumin.filemanager.view.MainWindowController;
+import ru.alexsumin.filemanager.view.FileManagerController;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -88,7 +87,7 @@ public class TreeItemWithLoading extends TreeItem<Path> {
                         //TODO: придумать что тут делать
                     }
                 }
-                FXCollections.sort(children, new DirectoryBeforeFileComparator());
+                FXCollections.sort(children, new DirOrFileComparator());
 
                 Thread.sleep(2000);
                 return children;
@@ -103,7 +102,7 @@ public class TreeItemWithLoading extends TreeItem<Path> {
 
         });
 
-        MainWindowController.EXEC.submit(loadTask);
+        FileManagerController.EXEC.submit(loadTask);
     }
 
     private void clearChildren() {

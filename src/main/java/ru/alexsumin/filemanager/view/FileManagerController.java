@@ -15,59 +15,47 @@ import javafx.stage.Stage;
 import org.apache.commons.lang3.SystemUtils;
 import ru.alexsumin.filemanager.model.MyTreeCell;
 import ru.alexsumin.filemanager.model.TreeItemWithLoading;
-import ru.alexsumin.filemanager.util.FileCopyTask;
-import ru.alexsumin.filemanager.util.FileDeleteTask;
-import ru.alexsumin.filemanager.util.FileRenameTask;
-import ru.alexsumin.filemanager.util.FileRunTask;
+import ru.alexsumin.filemanager.tasks.FileCopyTask;
+import ru.alexsumin.filemanager.tasks.FileDeleteTask;
+import ru.alexsumin.filemanager.tasks.FileRenameTask;
+import ru.alexsumin.filemanager.tasks.FileRunTask;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 
-public class MainWindowController {
+public class FileManagerController {
 
     public static final ExecutorService EXEC = Executors.newCachedThreadPool((Runnable r) -> {
         Thread t = new Thread(r);
-        t.setDaemon(true);
+        t.setDaemon(false);
         return t;
     });
-    public static List<TreeItemWithLoading> systemDirectories = new ArrayList();
     public static TreeItem root;
-    private boolean isWindows;
+    private static List<TreeItemWithLoading> systemDirectories;
     @FXML
     private TreeView<Path> treeView = new TreeView<>();
     @FXML
-    private Button copyButton = new Button();
+    private Button copyButton, cutButton, pasteButton, renameButton, deleteButton, newDirButton, openButton;
     @FXML
-    private Button cutButton = new Button();
-    @FXML
-    private Button pasteButton = new Button();
-    @FXML
-    private Button renameButton = new Button();
-    @FXML
-    private Button deleteButton = new Button();
-    @FXML
-    private Button newDirButton = new Button();
-    @FXML
-    private Button openButton = new Button();
+    private List<Button> buttons;
+
     private Path copiedFile;
     private Path target;
     private Path tempFile;
+
     private boolean isCutted;
     private TreeItemWithLoading selectedItem;
-    @FXML
-    private ArrayList<Button> buttons = new ArrayList();
+
 
     @FXML
     private void initialize() {
-        isWindows = isWindows();
 
         configureTreeView(treeView);
         treeView.setCellFactory(param -> new MyTreeCell());
@@ -83,6 +71,7 @@ public class MainWindowController {
             root = new TreeItem(null);
             treeView.setRoot(root);
             Iterable<Path> rootDirectories = FileSystems.getDefault().getRootDirectories();
+
             for (Path name : rootDirectories) {
                 TreeItemWithLoading systemNode = new TreeItemWithLoading(name);
                 root.getChildren().add(systemNode);

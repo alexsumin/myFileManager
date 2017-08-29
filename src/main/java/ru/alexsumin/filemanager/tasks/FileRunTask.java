@@ -1,4 +1,4 @@
-package ru.alexsumin.filemanager.util;
+package ru.alexsumin.filemanager.tasks;
 
 import javafx.concurrent.Task;
 import org.apache.commons.lang3.SystemUtils;

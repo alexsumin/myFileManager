@@ -1,4 +1,4 @@
-package ru.alexsumin.filemanager.util;
+package ru.alexsumin.filemanager.tasks;
 
 import javafx.concurrent.Task;
 
@@ -9,8 +9,8 @@ import java.nio.file.StandardCopyOption;
 
 public class FileRenameTask extends Task<Void> {
 
-    Path source;
-    Path target;
+    private Path source;
+    private Path target;
 
     public FileRenameTask(Path source, Path target) {
         this.source = source;
