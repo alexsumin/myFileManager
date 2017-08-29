@@ -87,7 +87,7 @@ public class TreeItemWithLoading extends TreeItem<Path> {
                         //TODO: придумать что тут делать
                     }
                 }
-                FXCollections.sort(children, new DirOrFileComparator());
+                FXCollections.sort(children, new DirFileComparator());
 
                 Thread.sleep(2000);
                 return children;

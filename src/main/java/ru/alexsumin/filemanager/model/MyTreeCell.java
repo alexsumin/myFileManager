@@ -63,18 +63,14 @@ public class MyTreeCell extends TreeCell<Path> {
                         this.setText(getString());
                     }
                 });
-
     }
 
 
     private void setImageForNode() {
-
-
         if (this.getTreeItem().equals(FileManagerController.root)) {
             this.setGraphic(PC);
             return;
         }
-
         try {
             Path path = getTreeItem().getValue();
             if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {

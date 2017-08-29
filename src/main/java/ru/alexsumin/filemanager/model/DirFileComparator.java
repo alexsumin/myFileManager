@@ -5,7 +5,7 @@ import java.nio.file.LinkOption;
 import java.util.Comparator;
 
 
-public class DirOrFileComparator implements Comparator<TreeItemWithLoading> {
+public class DirFileComparator implements Comparator<TreeItemWithLoading> {
 
 
     @Override

@@ -9,11 +9,14 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 public class Main extends Application {
+
+    private final Image APP = new Image(getClass().getResourceAsStream("/images/app.png"));
+
     public void start(Stage primaryStage) throws Exception {
         Parent root = FXMLLoader.load(getClass().getResource("/view/FileManager.fxml"));
         primaryStage.setTitle("File Manager");
         primaryStage.setScene(new Scene(root, 640, 600));
-        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/images/app.png")));
+        primaryStage.getIcons().add(APP);
         primaryStage.show();
     }
 }

@@ -37,6 +37,7 @@ public class FileManagerController {
         t.setDaemon(false);
         return t;
     });
+
     public static TreeItem root;
     private static List<TreeItemWithLoading> systemDirectories;
     @FXML
@@ -48,23 +49,22 @@ public class FileManagerController {
 
     private Path copiedFile;
     private Path target;
-    private Path tempFile;
-
     private boolean isCutted;
     private TreeItemWithLoading selectedItem;
-
 
     @FXML
     private void initialize() {
 
         configureTreeView(treeView);
         treeView.setCellFactory(param -> new MyTreeCell());
-        disableButtons();
+        setEnabledButtons(false);
         pasteButton.setDisable(true);
         openButton.setDisable(true);
         newDirButton.setDisable(true);
         treeView.setShowRoot(false);
+
     }
+
 
     private void configureTreeView(TreeView treeView) {
         if (isWindows()) {
@@ -92,11 +92,11 @@ public class FileManagerController {
                     openButton.setDisable(false);
                     selectedItem = (TreeItemWithLoading) newValue;
                     if (selectedItem == null || !isEditableItem(selectedItem)) {
-                        disableButtons();
+                        setEnabledButtons(false);
                         newDirButton.setDisable(false);
                         pasteButton.setDisable(false);
                     } else {
-                        enableButtons();
+                        setEnabledButtons(true);
                         pasteButton.setDisable(false);
                         newDirButton.setDisable(false);
                     }
@@ -105,16 +105,12 @@ public class FileManagerController {
 
     }
 
-    private void disableButtons() {
-        buttons.stream().forEach(button -> button.setDisable(true));
+    private void setEnabledButtons(boolean isEnabled) {
+        buttons.stream().forEach(button -> button.setDisable(!isEnabled));
     }
 
-    private void enableButtons() {
-        buttons.stream().forEach(button -> button.setDisable(false));
-    }
 
     private boolean isEditableItem(TreeItemWithLoading item) {
-
         if (item.equals(root)) {
             return false;
         }
@@ -128,17 +124,6 @@ public class FileManagerController {
 
     }
 
-    private void expandTreeView(TreeItemWithLoading item) {
-        if (item != null && !item.isLeaf()) {
-            item.setExpanded(true);
-        }
-    }
-
-    private void collapseTreeView(TreeItemWithLoading item) {
-        if (item != null && !item.isLeaf()) {
-            item.setExpanded(false);
-        }
-    }
 
     @FXML
     private void openRenameDialog() {
@@ -160,18 +145,17 @@ public class FileManagerController {
             }
         });
 
-
     }
 
     private void renameFile(String newName) {
 
         Path newPath = Paths.get(selectedItem.getValue().getParent() + File.separator + newName);
-        FileRenameTask fileRenameTask = new FileRenameTask(selectedItem.getValue(), newPath);
 
+        FileRenameTask fileRenameTask = new FileRenameTask(selectedItem.getValue(), newPath);
         fileRenameTask.setOnSucceeded(event -> selectedItem.setValue(newPath));
         fileRenameTask.setOnFailed(event -> showExceptionDialog(fileRenameTask.getException()));
-        EXEC.submit(fileRenameTask);
 
+        EXEC.submit(fileRenameTask);
 
     }
 
@@ -180,7 +164,7 @@ public class FileManagerController {
 
         alert.setTitle("Exception Dialog");
         alert.setHeight(400);
-        alert.setHeaderText("Ooops, Exception here");
+        alert.setHeaderText("Ooops, Exception is here");
         alert.setContentText(throwable.getMessage());
 
         StringWriter sw = new StringWriter();
@@ -236,25 +220,18 @@ public class FileManagerController {
 
     }
 
-
     @FXML
     private void openFile() {
         if (selectedItem == null) {
             return;
         }
         if (!selectedItem.isLeaf()) {
-            if (!selectedItem.isExpanded()) {
-                expandTreeView(selectedItem);
-            } else {
-                collapseTreeView(selectedItem);
-            }
+            selectedItem.setExpanded(!selectedItem.isExpanded());
         } else {
             FileRunTask fileRunTask = new FileRunTask(selectedItem.getValue());
             fileRunTask.setOnFailed(event -> showExceptionDialog(fileRunTask.getException()));
             EXEC.submit(fileRunTask);
         }
-
-
     }
 
     @FXML
@@ -272,20 +249,20 @@ public class FileManagerController {
             isCutted = true;
             selectedItem.getParent().getChildren().remove(selectedItem);
         }
-
     }
 
     @FXML
     private void pasteFile() {
         if (selectedItem != null && copiedFile != null) {
             target = (Files.isDirectory(selectedItem.getValue()) ? selectedItem.getValue() : selectedItem.getParent().getValue());
-            tempFile = copiedFile.getFileName();
+
+            Path tempFile = copiedFile.getFileName();
             FileCopyTask copyTask = new FileCopyTask(copiedFile, target, isCutted);
+
 
             copyTask.setOnSucceeded(event -> {
                 if (isCutted) isCutted = false;
                 addNewItemAfterIO(target + File.separator + tempFile);
-
             });
             copyTask.setOnFailed(evt -> showExceptionDialog(copyTask.getException()));
             EXEC.submit(copyTask);
