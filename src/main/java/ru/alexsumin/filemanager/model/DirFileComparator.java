@@ -4,6 +4,9 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.util.Comparator;
 
+/*
+Компаратор, используемый для того, чтобы при отображении папки шли перед файлами
+ */
 
 public class DirFileComparator implements Comparator<TreeItemWithLoading> {
 

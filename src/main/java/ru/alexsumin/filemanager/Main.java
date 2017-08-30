@@ -10,7 +10,7 @@ import javafx.stage.Stage;
 
 public class Main extends Application {
 
-    private final Image APP = new Image(getClass().getResourceAsStream("/images/app.png"));
+    private static final Image APP = new Image(Main.class.getResourceAsStream("/images/app.png"));
 
     public void start(Stage primaryStage) throws Exception {
         Parent root = FXMLLoader.load(getClass().getResource("/view/FileManager.fxml"));

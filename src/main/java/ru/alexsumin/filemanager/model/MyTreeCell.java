@@ -6,7 +6,6 @@ import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TreeCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import ru.alexsumin.filemanager.view.FileManagerController;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,12 +13,12 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 
 public class MyTreeCell extends TreeCell<Path> {
-    private final ImageView FILE = new ImageView(new Image(getClass().getResourceAsStream("/images/file.png"), 30, 30, false, false));
-    private final ImageView FOLDER = new ImageView(new Image(getClass().getResourceAsStream("/images/folder.png"), 30, 30, false, false));
-    private final ImageView FOLDER_OPEN = new ImageView(new Image(getClass().getResourceAsStream("/images/openedfolder.png"), 30, 30, false, false));
-    private final ImageView PC = new ImageView(new Image(getClass().getResourceAsStream("/images/pc.png"), 30, 30, false, false));
-    private final ImageView IMAGE = new ImageView(new Image(getClass().getResourceAsStream("/images/pictureFile.png"), 30, 30, false, false));
-    private final ImageView ERROR = new ImageView(new Image(getClass().getResourceAsStream("/images/lock.png"), 30, 30, false, false));
+
+    private static final Image FILE = new Image(MyTreeCell.class.getResourceAsStream("/images/file.png"), 30, 30, false, false);
+    private static final Image FOLDER = new Image(MyTreeCell.class.getResourceAsStream("/images/folder.png"), 30, 30, false, false);
+    private static final Image FOLDER_OPEN = new Image(MyTreeCell.class.getResourceAsStream("/images/openedfolder.png"), 30, 30, false, false);
+    private static final Image IMAGE = new Image(MyTreeCell.class.getResourceAsStream("/images/pictureFile.png"), 30, 30, false, false);
+    private static final Image ERROR = new Image(MyTreeCell.class.getResourceAsStream("/images/lock.png"), 30, 30, false, false);
 
 
     public MyTreeCell() {
@@ -35,6 +34,7 @@ public class MyTreeCell extends TreeCell<Path> {
                         setImageForNode();
                     }
                 };
+
 
         this.treeItemProperty().addListener(
                 (obs, oldItem, newItem) -> {
@@ -63,21 +63,19 @@ public class MyTreeCell extends TreeCell<Path> {
                         this.setText(getString());
                     }
                 });
+
+
     }
 
 
     private void setImageForNode() {
-        if (this.getTreeItem().equals(FileManagerController.root)) {
-            this.setGraphic(PC);
-            return;
-        }
         try {
             Path path = getTreeItem().getValue();
             if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
                 if (getTreeItem().isExpanded()) {
-                    this.setGraphic(FOLDER_OPEN);
+                    this.setGraphic(new ImageView(FOLDER_OPEN));
                 } else {
-                    this.setGraphic(FOLDER);
+                    this.setGraphic(new ImageView(FOLDER));
                 }
             } else {
                 String pic = Files.probeContentType(path);
@@ -85,7 +83,7 @@ public class MyTreeCell extends TreeCell<Path> {
                     if (Files.size(path) < 5 * 1024 * 1024) {
                         Image image = new Image("file:" + path);
                         if (image.isError()) {
-                            this.setGraphic(IMAGE);
+                            this.setGraphic(new ImageView(IMAGE));
                         } else {
                             ImageView imageView = new ImageView(image);
                             imageView.setFitHeight(40);
@@ -94,15 +92,15 @@ public class MyTreeCell extends TreeCell<Path> {
                             this.setGraphic(imageView);
                         }
                     } else {
-                        this.setGraphic(IMAGE);
+                        this.setGraphic(new ImageView(IMAGE));
                     }
                 } else {
-                    this.setGraphic(FILE);
+                    this.setGraphic(new ImageView(FILE));
                 }
 
             }
         } catch (IOException e) {
-            this.setGraphic(ERROR);
+            this.setGraphic(new ImageView(ERROR));
         }
     }
 

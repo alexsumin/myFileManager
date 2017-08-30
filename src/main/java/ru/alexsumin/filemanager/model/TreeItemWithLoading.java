@@ -20,8 +20,8 @@ public class TreeItemWithLoading extends TreeItem<Path> {
 
     private final BooleanProperty loading = new SimpleBooleanProperty(false);
     private boolean isLeaf = true;
-    private boolean isFirstTimeLeaf = true;
     private byte newDirCount = 0;
+
 
     public TreeItemWithLoading(Path value) {
         super(value);
@@ -32,7 +32,6 @@ public class TreeItemWithLoading extends TreeItem<Path> {
             } else {
                 clearChildren();
             }
-
         });
     }
 
@@ -55,17 +54,11 @@ public class TreeItemWithLoading extends TreeItem<Path> {
 
     @Override
     public boolean isLeaf() {
-        if (isFirstTimeLeaf) {
-            isFirstTimeLeaf = false;
-            Path path = getValue();
-            isLeaf = !Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS);
-        }
+        Path path = getValue();
+        isLeaf = !Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS);
         return isLeaf;
     }
 
-    public void setLeaf(boolean leaf) {
-        isLeaf = leaf;
-    }
 
     private void loadChildrenLazily() {
         setLoading(true);
@@ -84,7 +77,7 @@ public class TreeItemWithLoading extends TreeItem<Path> {
                             children.add(item);
                         }
                     } catch (IOException ex) {
-                        //TODO: придумать что тут делать
+                        //TODO: подумать, что тут делать
                     }
                 }
                 FXCollections.sort(children, new DirFileComparator());
@@ -94,15 +87,14 @@ public class TreeItemWithLoading extends TreeItem<Path> {
             }
         };
 
-
         loadTask.setOnSucceeded(event -> {
             List<TreeItemWithLoading> children = loadTask.getValue();
             getChildren().setAll(children);
             setLoading(false);
-
         });
 
         FileManagerController.EXEC.submit(loadTask);
+
     }
 
     private void clearChildren() {

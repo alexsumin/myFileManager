@@ -34,12 +34,12 @@ public class FileManagerController {
 
     public static final ExecutorService EXEC = Executors.newCachedThreadPool((Runnable r) -> {
         Thread t = new Thread(r);
-        t.setDaemon(false);
+        t.setDaemon(true);
         return t;
     });
 
-    public static TreeItem root;
-    private static List<TreeItemWithLoading> systemDirectories;
+    private TreeItem root;
+    private List<TreeItemWithLoading> systemDirectories;
     @FXML
     private TreeView<Path> treeView = new TreeView<>();
     @FXML
@@ -67,11 +67,11 @@ public class FileManagerController {
 
 
     private void configureTreeView(TreeView treeView) {
-        if (isWindows()) {
+        if (SystemUtils.IS_OS_WINDOWS) {
             root = new TreeItem(null);
             treeView.setRoot(root);
-            Iterable<Path> rootDirectories = FileSystems.getDefault().getRootDirectories();
 
+            Iterable<Path> rootDirectories = FileSystems.getDefault().getRootDirectories();
             for (Path name : rootDirectories) {
                 TreeItemWithLoading systemNode = new TreeItemWithLoading(name);
                 root.getChildren().add(systemNode);
@@ -111,10 +111,7 @@ public class FileManagerController {
 
 
     private boolean isEditableItem(TreeItemWithLoading item) {
-        if (item.equals(root)) {
-            return false;
-        }
-        if (isWindows()) {
+        if (SystemUtils.IS_OS_WINDOWS) {
             for (TreeItemWithLoading t : systemDirectories) {
                 if (item.equals(t))
                     return false;
@@ -152,12 +149,16 @@ public class FileManagerController {
         Path newPath = Paths.get(selectedItem.getValue().getParent() + File.separator + newName);
 
         FileRenameTask fileRenameTask = new FileRenameTask(selectedItem.getValue(), newPath);
-        fileRenameTask.setOnSucceeded(event -> selectedItem.setValue(newPath));
+        fileRenameTask.setOnSucceeded(event -> {
+            selectedItem.setValue(newPath);
+            selectedItem.setExpanded(false);
+        });
         fileRenameTask.setOnFailed(event -> showExceptionDialog(fileRenameTask.getException()));
 
         EXEC.submit(fileRenameTask);
 
     }
+
 
     private void showExceptionDialog(Throwable throwable) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -203,9 +204,6 @@ public class FileManagerController {
         alert.showAndWait();
     }
 
-    private boolean isWindows() {
-        return SystemUtils.IS_OS_WINDOWS;
-    }
 
     @FXML
     private void deleteFile() {
@@ -253,6 +251,18 @@ public class FileManagerController {
 
     @FXML
     private void pasteFile() {
+        if (!Files.exists(copiedFile)) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Warning!");
+            alert.setHeaderText("The source file doesn't exist");
+            DialogPane dialogPane = alert.getDialogPane();
+            dialogPane.getStylesheets().add(
+                    getClass().getResource("/view/BasicApplication.css").toExternalForm());
+            alert.showAndWait();
+            return;
+        }
+
+
         if (selectedItem != null && copiedFile != null) {
             target = (Files.isDirectory(selectedItem.getValue()) ? selectedItem.getValue() : selectedItem.getParent().getValue());
 

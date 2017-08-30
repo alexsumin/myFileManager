@@ -19,6 +19,11 @@ public class FileRunTask extends Task<Void> {
     protected Void call() throws Exception {
         if (!SystemUtils.IS_OS_WINDOWS) {
 
+            /*
+            В ubuntu16.04 Desktop.getDesktop().open по умолчанию
+            не поддерживается: нет нужных библиотек; смею предположить,
+            что в других дистрибутивах тоже может быть такая проблема
+             */
             Runtime runtime = Runtime.getRuntime();
             try {
                 runtime.exec("xdg-open " + forRun.toAbsolutePath());
