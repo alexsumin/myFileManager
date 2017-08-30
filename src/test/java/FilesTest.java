@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 public class FilesTest {
     @Rule
     public JavaFXThreadingRule javafxRule = new JavaFXThreadingRule();
+
     private File folder1 = new File("forTest/folder1");
     private File folder2 = new File("forTest/folder2");
     private File folder3 = new File("forTest/folder3");

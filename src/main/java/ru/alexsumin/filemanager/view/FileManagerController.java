@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -39,7 +40,7 @@ public class FileManagerController {
     });
 
     private TreeItem root;
-    private List<TreeItemWithLoading> systemDirectories;
+    private List<TreeItemWithLoading> systemDirectories = new ArrayList<>();
     @FXML
     private TreeView<Path> treeView = new TreeView<>();
     @FXML
