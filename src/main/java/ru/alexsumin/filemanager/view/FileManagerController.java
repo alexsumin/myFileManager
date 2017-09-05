@@ -354,10 +354,4 @@ public class FileManagerController {
         }
     }
 
-    class MySecurityManager extends SecurityManager {
-        @Override
-        public void checkExit(int status) {
-            throw new SecurityException();
-        }
-    }
 }
