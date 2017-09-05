@@ -35,9 +35,10 @@ public class FileManagerController {
 
     public static final ExecutorService EXEC = Executors.newCachedThreadPool((Runnable r) -> {
         Thread t = new Thread(r);
-        t.setDaemon(true);
+        t.setDaemon(false);
         return t;
     });
+
 
     private TreeItem root;
     private List<TreeItemWithLoading> systemDirectories = new ArrayList<>();
@@ -63,6 +64,11 @@ public class FileManagerController {
         openButton.setDisable(true);
         newDirButton.setDisable(true);
         treeView.setShowRoot(false);
+
+        //Runtime.getRuntime().addShutdownHook(new Thread(() -> shutdown()));
+
+
+
 
     }
 
@@ -153,6 +159,7 @@ public class FileManagerController {
         fileRenameTask.setOnSucceeded(event -> {
             selectedItem.setValue(newPath);
             selectedItem.setExpanded(false);
+            selectedItem.setExpanded(true);
         });
         fileRenameTask.setOnFailed(event -> showExceptionDialog(fileRenameTask.getException()));
 
@@ -352,4 +359,10 @@ public class FileManagerController {
         }
     }
 
+    class MySecurityManager extends SecurityManager {
+        @Override
+        public void checkExit(int status) {
+            throw new SecurityException();
+        }
+    }
 }
