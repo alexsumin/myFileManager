@@ -65,11 +65,6 @@ public class FileManagerController {
         newDirButton.setDisable(true);
         treeView.setShowRoot(false);
 
-        //Runtime.getRuntime().addShutdownHook(new Thread(() -> shutdown()));
-
-
-
-
     }
 
 
